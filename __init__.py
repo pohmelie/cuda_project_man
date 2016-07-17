@@ -352,3 +352,12 @@ class Command:
         tree_proc(self.tree, TREE_ITEM_SELECT, items[0][0])
 
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
+
+    def on_open_pre(self, ed_self, filename):
+        
+        if filename.endswith(PROJECT_EXTENSION):
+            
+            self.init_panel()
+            self.action_open_project(filename)
+            msg_status("Opened project: "+filename)
+            return False #block opening file
