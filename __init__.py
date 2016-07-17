@@ -9,6 +9,7 @@ import cudatext_cmd
 
 
 PROJECT_EXTENSION = ".cuda-proj"
+DIALOG_FILTER = "CudaText projects|*"+PROJECT_EXTENSION
 NODES = NODE_PROJECT, NODE_DIR, NODE_FILE = range(3)
 
 icon_names = {
@@ -217,7 +218,7 @@ class Command:
 
         if path is None:
 
-            path = dlg_file(True, "", "", "")
+            path = dlg_file(True, "", "", DIALOG_FILTER)
 
         if path:
 
@@ -264,7 +265,7 @@ class Command:
         need_refresh = path is None
         if path is None:
 
-            path = dlg_file(False, "", "", "")
+            path = dlg_file(False, "", "", DIALOG_FILTER)
 
         if path:
 
