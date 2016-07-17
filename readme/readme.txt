@@ -13,4 +13,8 @@ Context menu has commands:
  - Remove node
  - Clear project
 
+Notes:
+- You can add only root nodes to tree-view. Project files store only links for root-nodes (files, dirs). File-list of folders is not saved to project. So project files are small.
+- You can open project files from Open dialog, or command line. Instead of opening raw JSON content, Project panel will open. (Needs CudaText 1.3.28+)
+
 Homepage: https://github.com/pohmelie/cuda_project_man
