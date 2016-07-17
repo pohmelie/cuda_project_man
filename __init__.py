@@ -39,8 +39,9 @@ class Command:
     )
     options = {
         "recent_projects": [],
-        "visible": False,
     }
+    tree = None
+    
 
     def __init__(self):
 
@@ -75,10 +76,9 @@ class Command:
 
     def show_panel(self):
 
-        if not self.options["visible"]:
+        if not self.tree:
 
             self.init_panel()
-            self.options["visible"] = True
 
     @property
     def selected(self):
@@ -299,7 +299,7 @@ class Command:
 
     def on_panel(self, ed_self, id_control, id_event):
 
-        if not self.options["visible"] or id_control != self.tree:
+        if not self.tree or id_control != self.tree:
 
             return
 
