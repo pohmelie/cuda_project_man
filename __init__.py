@@ -260,7 +260,10 @@ class Command:
         need_refresh = path is None
         if path is None:
 
-            project_path = self.project_file_path.parent
+            if self.project_file_path:
+                project_path = str(self.project_file_path.parent)
+            else:
+                project_path = ""
             path = dlg_file(False, "", project_path, DIALOG_FILTER)
 
         if path:
