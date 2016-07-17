@@ -11,5 +11,5 @@ events=on_panel
 
 [item2]
 section=commands
-caption=Project Manager\Toggle panel
-method=toggle_panel
+caption=Project Manager\Show panel
+method=show_panel

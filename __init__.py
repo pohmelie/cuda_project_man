@@ -37,13 +37,13 @@ class Command:
         "Remove node",
         "Clear project",
     )
+    options = {
+        "recent_projects": [],
+        "visible": False,
+    }
 
     def __init__(self):
 
-        self.options = {
-            "recent_projects": [],
-            "visible": False,
-        }
         settings_dir = Path(app_path(APP_DIR_SETTINGS))
         self.options_filename = settings_dir / "cuda_project_man.json"
 
@@ -54,9 +54,6 @@ class Command:
                 self.options = json.load(fin)
 
         self.new_project()
-        if self.options["visible"]:
-
-            self.init_panel()
 
     def init_panel(self):
 
@@ -76,14 +73,12 @@ class Command:
         self.action_refresh()
         self.generate_context_menu()
 
-    def toggle_panel(self):
+    def show_panel(self):
 
         if not self.options["visible"]:
 
             self.init_panel()
-
-        self.options["visible"] ^= True
-        self.save_options()
+            self.options["visible"] = True
 
     @property
     def selected(self):
