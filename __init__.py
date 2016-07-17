@@ -331,4 +331,21 @@ class Command:
         self.init_panel()    
         self.action_open_project(items[res])
         
+    def new_project_open_dir(self):
+    
+        self.init_panel()
+        self.action_new_project()
+        self.action_add_directory()
+        
+        # unfold 1st item under root
+        items = tree_proc(self.tree, TREE_ITEM_ENUM, 0)
+        if not items:
+            return
+        items = tree_proc(self.tree, TREE_ITEM_ENUM, items[0][0])
+        if not items:
+            return
+        tree_proc(self.tree, TREE_ITEM_UNFOLD, items[0][0])
+        tree_proc(self.tree, TREE_ITEM_SELECT, items[0][0])
+        
+        app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
         

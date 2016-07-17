@@ -18,3 +18,9 @@ method=show_panel
 section=commands
 caption=Project Manager\Open recent project...
 method=menu_recents
+
+[item10]
+section=commands
+caption=Project Manager\New project/ Open folder...
+method=new_project_open_dir
+
