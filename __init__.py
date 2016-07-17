@@ -41,7 +41,7 @@ class Command:
         "recent_projects": [],
     }
     tree = None
-    
+
 
     def __init__(self):
 
@@ -260,8 +260,8 @@ class Command:
         need_refresh = path is None
         if path is None:
 
-            path_dir = os.path.dirname(str(self.project_file_path))
-            path = dlg_file(False, "", path_dir, DIALOG_FILTER)
+            project_path = self.project_file_path.parent
+            path = dlg_file(False, "", project_path, DIALOG_FILTER)
 
         if path:
 
@@ -319,25 +319,25 @@ class Command:
             json.dump(self.options, fout, indent=4)
 
     def menu_recents(self):
-        
+
         items = self.options["recent_projects"]
-        if not items: 
+        if not items:
             return
-        
+
         items_nice = [os.path.basename(fn)+'\t'+os.path.dirname(fn) for fn in items]
         res = dlg_menu(MENU_LIST, '\n'.join(items_nice))
-        if res is None: 
+        if res is None:
             return
-        
-        self.init_panel()    
+
+        self.init_panel()
         self.action_open_project(items[res])
-        
+
     def new_project_open_dir(self):
-    
+
         self.init_panel()
         self.action_new_project()
         self.action_add_directory()
-        
+
         # unfold 1st item under root
         items = tree_proc(self.tree, TREE_ITEM_ENUM, 0)
         if not items:
@@ -347,6 +347,5 @@ class Command:
             return
         tree_proc(self.tree, TREE_ITEM_UNFOLD, items[0][0])
         tree_proc(self.tree, TREE_ITEM_SELECT, items[0][0])
-        
+
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
-        
