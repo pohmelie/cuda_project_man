@@ -316,3 +316,19 @@ class Command:
         with self.options_filename.open(mode="w") as fout:
 
             json.dump(self.options, fout, indent=4)
+
+    def menu_recents(self):
+        
+        items = self.options["recent_projects"]
+        if not items: 
+            return
+        
+        items_nice = [os.path.basename(fn)+'\t'+os.path.dirname(fn) for fn in items]
+        res = dlg_menu(MENU_LIST, '\n'.join(items_nice))
+        if res is None: 
+            return
+        
+        self.init_panel()    
+        self.action_open_project(items[res])
+        
+        

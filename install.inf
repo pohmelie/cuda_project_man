@@ -13,3 +13,8 @@ events=on_panel
 section=commands
 caption=Project Manager\Show panel
 method=show_panel
+
+[item3]
+section=commands
+caption=Project Manager\Open recent project...
+method=menu_recents
