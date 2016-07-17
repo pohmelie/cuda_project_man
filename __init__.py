@@ -260,7 +260,8 @@ class Command:
         need_refresh = path is None
         if path is None:
 
-            path = dlg_file(False, "", "", DIALOG_FILTER)
+            path_dir = os.path.dirname(str(self.project_file_path))
+            path = dlg_file(False, "", path_dir, DIALOG_FILTER)
 
         if path:
 
