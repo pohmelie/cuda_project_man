@@ -2,6 +2,7 @@ import os
 import collections
 import json
 import stat
+from fnmatch import fnmatch
 from .pathlib import Path, PurePosixPath
 from .dlg import *
 
@@ -22,13 +23,13 @@ icon_names = {
 NodeInfo = collections.namedtuple("NodeInfo", "caption index image level")
 
 
-def is_filename_ext_listed(filename, ext_list):
+def is_filename_mask_listed(name, mask_list):
 
-    fn = os.path.basename(filename)
-    n = fn.rfind('.')
-    if n<0: return False
-    fn = fn[n+1:]
-    return ' '+fn+' ' in ' '+ext_list+' '
+    s = os.path.basename(name)
+    for item in mask_list.split(' '):
+        if fnmatch(s, item):
+            return True
+    return False
 
 
 class Command:
@@ -49,7 +50,7 @@ class Command:
     )
     options = {
         "recent_projects": [],
-        "ext_ignore": DEFAULT_EXT_IGNORE,
+        "masks_ignore": DEFAULT_MASKS_IGNORE,
     }
     tree = None
 
@@ -383,5 +384,5 @@ class Command:
 
     def is_filename_ignored(self, fn):
     
-        ext_list = self.options.get("ext_ignore", DEFAULT_EXT_IGNORE)
-        return is_filename_ext_listed(fn, ext_list)
+        mask_list = self.options.get("masks_ignore", DEFAULT_MASKS_IGNORE)
+        return is_filename_mask_listed(fn, mask_list)

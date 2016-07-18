@@ -1,7 +1,7 @@
 import os
 from cudatext import *
 
-DEFAULT_EXT_IGNORE = 'zip 7z tar gz rar exe'
+DEFAULT_MASKS_IGNORE = '*.zip *.7z *.tar *.gz *.rar *.exe *.dll .git .svn'
 
 def dialog_config(op):
 
@@ -10,9 +10,9 @@ def dialog_config(op):
     
     c1 = chr(1)
     text = '\n'.join([]
-        +[c1.join(['type=label', 'pos=6,6,500,0', 'cap=File extensions to ignore (space-separated):'])]
-        +[c1.join(['type=edit', 'pos=6,24,500,0', 'val='+op.get('ext_ignore', DEFAULT_EXT_IGNORE)])]
-        +[c1.join(['type=button', 'pos=300,200,400,0', 'cap=OK', 'props=1'])]
+        +[c1.join(['type=label', 'pos=6,6,500,0', 'cap=&File/folder masks to ignore (space-separated):'])]
+        +[c1.join(['type=edit', 'pos=6,24,500,0', 'val='+op.get('masks_ignore', DEFAULT_MASKS_IGNORE)])]
+        +[c1.join(['type=button', 'pos=300,200,400,0', 'cap=&OK', 'props=1'])]
         +[c1.join(['type=button', 'pos=406,200,506,0', 'cap=Cancel'])]
     )
     
@@ -26,6 +26,9 @@ def dialog_config(op):
     if res != id_ok:
         return
         
-    op['ext_ignore'] = text[id_ignore]
+    s = text[id_ignore].strip()
+    while '  ' in s:
+        s = s.replace('  ', ' ')
+    op['masks_ignore'] = s
 
     return True
