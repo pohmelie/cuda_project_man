@@ -3,6 +3,7 @@ import collections
 import json
 import stat
 from .pathlib import Path, PurePosixPath
+from .dlg import *
 
 from cudatext import *
 import cudatext_cmd
@@ -19,6 +20,15 @@ icon_names = {
 }
 
 NodeInfo = collections.namedtuple("NodeInfo", "caption index image level")
+
+
+def is_filename_ext_listed(filename, ext_list):
+
+    fn = os.path.basename(filename)
+    n = fn.rfind('.')
+    if n<0: return False
+    fn = fn[n+1:]
+    return ' '+fn+' ' in ' '+ext_list+' '
 
 
 class Command:
@@ -39,6 +49,7 @@ class Command:
     )
     options = {
         "recent_projects": [],
+        "ext_ignore": DEFAULT_EXT_IGNORE,
     }
     tree = None
 
@@ -182,6 +193,9 @@ class Command:
             self.top_nodes = {}
 
         for path in map(Path, nodes):
+
+            if self.is_filename_ignored(path.name):
+                continue
 
             index = tree_proc(
                 self.tree,
@@ -361,3 +375,13 @@ class Command:
             self.action_open_project(filename)
             msg_status("Opened project: "+filename)
             return False #block opening file
+
+    def config(self):
+        
+        if dialog_config(self.options):
+            self.save_options()
+
+    def is_filename_ignored(self, fn):
+    
+        ext_list = self.options.get("ext_ignore", DEFAULT_EXT_IGNORE)
+        return is_filename_ext_listed(fn, ext_list)
