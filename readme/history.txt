@@ -1,5 +1,9 @@
 
 2016.07.18
++ dlg Commands has items for context-menu items
++ option dialog reworked
+
+2016.07.18
 + allow to open prj from Open dlg
 + more menuitems in Plugins
 + filter in Open/Save dlg
