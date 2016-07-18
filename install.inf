@@ -7,7 +7,7 @@ homepage=https://github.com/pohmelie/cuda_project_man
 
 [item1]
 section=events
-events=on_panel,on_open_pre
+events=on_panel,on_open_pre,on_start
 
 [item2]
 section=commands

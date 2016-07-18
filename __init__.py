@@ -51,6 +51,7 @@ class Command:
     options = {
         "recent_projects": [],
         "masks_ignore": DEFAULT_MASKS_IGNORE,
+        "on_start": False,
     }
     tree = None
 
@@ -391,6 +392,16 @@ class Command:
         mask_list = self.options.get("masks_ignore", DEFAULT_MASKS_IGNORE)
         return is_filename_mask_listed(fn, mask_list)
 
+    def on_start(self, ed_self):
+        
+        if not self.options.get("on_start", False):
+            return
+            
+        self.init_panel()
+        items = self.options.get("recent_projects", [])
+        if items:
+            self.action_open_project(items[0])
+    
     def contextmenu_add_dir(self):
 
         self.init_panel()
