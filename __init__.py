@@ -473,7 +473,6 @@ class Command:
 
         files = []
         filename_to_find = ''
-        item_found = None
 
         def callback_collect(fn, item):
             if os.path.isfile(fn):
@@ -481,10 +480,8 @@ class Command:
             return True
 
         def callback_find(fn, item):
-            nonlocal item_found
-            nonlocal filename_to_find
             if fn==filename_to_find:
-                item_found = item
+                tree_proc(self.tree, TREE_ITEM_SELECT, item)
                 return False
             return True
 
@@ -499,9 +496,4 @@ class Command:
 
         filename_to_find = files[res]
         msg_status('Go to: '+filename_to_find)
-
         self.enum_all(callback_find)
-        if not item_found:
-            return
-
-        tree_proc(self.tree, TREE_ITEM_SELECT, item_found)
