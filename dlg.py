@@ -7,14 +7,19 @@ def dialog_config(op):
 
     id_ignore = 1
     id_recents = 3
-    id_ok = 4
+    id_on_start = 4
+    id_ok = 5
     
     c1 = chr(1)
     text = '\n'.join([]
         +[c1.join(['type=label', 'pos=6,6,500,0', 'cap=&File/folder masks to ignore (space-separated):'])]
-        +[c1.join(['type=edit', 'pos=6,24,500,0', 'val='+op.get('masks_ignore', DEFAULT_MASKS_IGNORE)])]
+        +[c1.join(['type=edit', 'pos=6,24,500,0', 
+            'val='+op.get('masks_ignore', DEFAULT_MASKS_IGNORE)])]
         +[c1.join(['type=label', 'pos=6,54,500,0', 'cap=&Recent projects:'])]
-        +[c1.join(['type=memo', 'pos=6,74,500,180', 'val='+'\t'.join(op.get('recent_projects', [])) ])]
+        +[c1.join(['type=memo', 'pos=6,74,500,180', 
+            'val='+'\t'.join(op.get('recent_projects', [])) ])]
+        +[c1.join(['type=check', 'pos=6,186,400,0', 'cap=&Show panel on editor start', 
+            'val='+('1' if op.get('on_start', False) else '0') ])]
         +[c1.join(['type=button', 'pos=300,300,400,0', 'cap=&OK', 'props=1'])]
         +[c1.join(['type=button', 'pos=406,300,506,0', 'cap=Cancel'])]
     )
@@ -36,5 +41,7 @@ def dialog_config(op):
     
     s = text[id_recents].split('\t')
     op['recent_projects'] = s
+
+    op['on_start'] = text[id_on_start]=='1'
 
     return True
