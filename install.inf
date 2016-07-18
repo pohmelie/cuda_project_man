@@ -19,16 +19,16 @@ section=commands
 caption=&Project Manager\Open &recent project...
 method=menu_recents
 
-[item4]
-section=commands
-caption=&Project Manager\&Go to file...
-method=menu_goto
-
-
 [item10]
 section=commands
 caption=&Project Manager\New project/ &Open folder...
 method=new_project_open_dir
+
+[item15]
+section=commands
+caption=&Project Manager\&Go to file...
+method=menu_goto
+
 
 [item50]
 section=commands

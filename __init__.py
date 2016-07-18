@@ -471,6 +471,10 @@ class Command:
 
     def menu_goto(self):
 
+        if not self.tree:
+            msg_status('Project not opened')
+            return
+
         files = []
         filename_to_find = ''
 
@@ -487,6 +491,7 @@ class Command:
 
         self.enum_all(callback_collect)
         if not files:
+            msg_status('Project is empty')
             return
 
         files_nice = [os.path.basename(fn)+'\t'+os.path.dirname(fn) for fn in files]
