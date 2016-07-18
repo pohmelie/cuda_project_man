@@ -11,74 +11,74 @@ events=on_panel,on_open_pre
 
 [item2]
 section=commands
-caption=Project Manager\Show panel
+caption=&Project Manager\&Show panel
 method=show_panel
 
 [item3]
 section=commands
-caption=Project Manager\Open recent project...
+caption=&Project Manager\Open &recent project...
 method=menu_recents
 
 [item10]
 section=commands
-caption=Project Manager\New project/ Open folder...
+caption=&Project Manager\New project/ &Open folder...
 method=new_project_open_dir
 
 [item50]
 section=commands
-caption=Project Manager\-
+caption=&Project Manager\-
 method=_
 
 [item51]
 section=commands
-caption=Project Manager\Config...
+caption=&Project Manager\&Config...
 method=config
 
 
 [item100]
 section=commands
-caption=Project Manager\Context menu\Add directory...
+caption=&Project Manager\Context menu\Add directory...
 method=contextmenu_add_dir
 menu=0
 
 [item101]
 section=commands
-caption=Project Manager\Context menu\Add file...
+caption=&Project Manager\Context menu\Add file...
 method=contextmenu_add_file
 menu=0
 
 [item102]
 section=commands
-caption=Project Manager\Context menu\New project
+caption=&Project Manager\Context menu\New project
 method=contextmenu_new_proj
 menu=0
 
 [item103]
 section=commands
-caption=Project Manager\Context menu\Open project...
+caption=&Project Manager\Context menu\Open project...
 method=contextmenu_open_proj
 menu=0
 
 [item104]
 section=commands
-caption=Project Manager\Context menu\Save project as...
+caption=&Project Manager\Context menu\Save project as...
 method=contextmenu_save_proj_as
 menu=0
 
 [item105]
 section=commands
-caption=Project Manager\Context menu\Refresh
+caption=&Project Manager\Context menu\Refresh
 method=contextmenu_refresh
 menu=0
 
 [item106]
 section=commands
-caption=Project Manager\Context menu\Remove node
+caption=&Project Manager\Context menu\Remove node
 method=contextmenu_remove_node
 menu=0
 
 [item107]
 section=commands
-caption=Project Manager\Context menu\Clear project
+caption=&Project Manager\Context menu\Clear project
 method=contextmenu_clear_proj
 menu=0
