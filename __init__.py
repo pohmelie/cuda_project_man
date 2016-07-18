@@ -128,7 +128,7 @@ class Command:
                 for path in self.options["recent_projects"]:
 
                     action = str.format(
-                        "cuda_project_man,action_open_project,'{}'",
+                        "cuda_project_man,action_open_project,r'{}'",
                         path,
                     )
                     self.add_context_menu_node(sub_parent, action, path)
