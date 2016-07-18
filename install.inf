@@ -33,3 +33,52 @@ method=_
 section=commands
 caption=Project Manager\Config...
 method=config
+
+
+[item100]
+section=commands
+caption=Project Manager\Context menu\Add directory...
+method=contextmenu_add_dir
+menu=0
+
+[item101]
+section=commands
+caption=Project Manager\Context menu\Add file...
+method=contextmenu_add_file
+menu=0
+
+[item102]
+section=commands
+caption=Project Manager\Context menu\New project
+method=contextmenu_new_proj
+menu=0
+
+[item103]
+section=commands
+caption=Project Manager\Context menu\Open project...
+method=contextmenu_open_proj
+menu=0
+
+[item104]
+section=commands
+caption=Project Manager\Context menu\Save project as...
+method=contextmenu_save_proj_as
+menu=0
+
+[item105]
+section=commands
+caption=Project Manager\Context menu\Refresh
+method=contextmenu_refresh
+menu=0
+
+[item106]
+section=commands
+caption=Project Manager\Context menu\Remove node
+method=contextmenu_remove_node
+menu=0
+
+[item107]
+section=commands
+caption=Project Manager\Context menu\Clear project
+method=contextmenu_clear_proj
+menu=0

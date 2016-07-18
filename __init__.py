@@ -70,6 +70,10 @@ class Command:
 
     def init_panel(self):
 
+        #already inited?
+        if self.tree:
+            return
+
         ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
         app_proc(PROC_SIDEPANEL_ADD, self.title + ",-1,tree")
 
@@ -369,20 +373,60 @@ class Command:
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
     def on_open_pre(self, ed_self, filename):
-        
+
         if filename.endswith(PROJECT_EXTENSION):
-            
+
             self.init_panel()
             self.action_open_project(filename)
             msg_status("Opened project: "+filename)
             return False #block opening file
 
     def config(self):
-        
+
         if dialog_config(self.options):
             self.save_options()
 
     def is_filename_ignored(self, fn):
-    
+
         mask_list = self.options.get("masks_ignore", DEFAULT_MASKS_IGNORE)
         return is_filename_mask_listed(fn, mask_list)
+
+    def contextmenu_add_dir(self):
+
+        self.init_panel()
+        self.action_add_directory()
+
+    def contextmenu_add_file(self):
+
+        self.init_panel()
+        self.action_add_file()
+
+    def contextmenu_new_proj(self):
+
+        self.init_panel()
+        self.action_new_project()
+
+    def contextmenu_open_proj(self):
+
+        self.init_panel()
+        self.action_open_project()
+
+    def contextmenu_save_proj_as(self):
+
+        self.init_panel()
+        self.action_save_project_as()
+
+    def contextmenu_refresh(self):
+
+        self.init_panel()
+        self.action_refresh()
+
+    def contextmenu_remove_node(self):
+
+        self.init_panel()
+        self.action_remove_node()
+
+    def contextmenu_clear_proj(self):
+
+        self.init_panel()
+        self.action_clear_project()
