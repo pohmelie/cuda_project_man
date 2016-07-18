@@ -24,3 +24,12 @@ section=commands
 caption=Project Manager\New project/ Open folder...
 method=new_project_open_dir
 
+[item50]
+section=commands
+caption=Project Manager\-
+method=_
+
+[item51]
+section=commands
+caption=Project Manager\Config...
+method=config
