@@ -393,15 +393,15 @@ class Command:
         return is_filename_mask_listed(fn, mask_list)
 
     def on_start(self, ed_self):
-        
+
         if not self.options.get("on_start", False):
             return
-            
+
         self.init_panel()
         items = self.options.get("recent_projects", [])
         if items:
             self.action_open_project(items[0])
-    
+
     def contextmenu_add_dir(self):
 
         self.init_panel()
@@ -441,3 +441,67 @@ class Command:
 
         self.init_panel()
         self.action_clear_project()
+
+    def enum_all(self, callback):
+        """
+        Callback for all items.
+        Until callback gets false.
+        """
+
+        items = tree_proc(self.tree, TREE_ITEM_ENUM, 0)
+        if items:
+            self.enum_subitems(items[0][0], callback)
+
+    def enum_subitems(self, item, callback):
+        """
+        Callback for all subitems of given item.
+        Until callback gets false.
+        """
+
+        items = tree_proc(self.tree, TREE_ITEM_ENUM, item)
+        if items:
+            for i in items:
+                subitem = i[0]
+                fn = str(self.get_location_by_index(subitem))
+                if not callback(fn, subitem):
+                    return False
+                if not self.enum_subitems(subitem, callback):
+                    return False
+        return True
+
+    def menu_goto(self):
+
+        files = []
+        filename_to_find = ''
+        item_found = None
+
+        def callback_collect(fn, item):
+            if os.path.isfile(fn):
+                files.append(fn)
+            return True
+
+        def callback_find(fn, item):
+            nonlocal item_found
+            nonlocal filename_to_find
+            if fn==filename_to_find:
+                item_found = item
+                return False
+            return True
+
+        self.enum_all(callback_collect)
+        if not files:
+            return
+
+        files_nice = [os.path.basename(fn)+'\t'+os.path.dirname(fn) for fn in files]
+        res = dlg_menu(MENU_LIST_ALT, '\n'.join(files_nice))
+        if res is None:
+            return
+
+        filename_to_find = files[res]
+        msg_status('Go to: '+filename_to_find)
+
+        self.enum_all(callback_find)
+        if not item_found:
+            return
+
+        tree_proc(self.tree, TREE_ITEM_SELECT, item_found)
