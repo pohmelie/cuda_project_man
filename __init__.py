@@ -323,7 +323,7 @@ class Command:
             index = tree_proc(self.tree, TREE_ITEM_GET_PARENT, index)
 
         path.reverse()
-        full_path = Path(self.top_nodes[index] / str.join("/", path))
+        full_path = Path(self.top_nodes[index] / str.join(os.sep, path))
 
         return full_path
 
