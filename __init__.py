@@ -9,9 +9,10 @@ from .dlg import *
 from cudatext import *
 import cudatext_cmd
 
-
 PROJECT_EXTENSION = ".cuda-proj"
-DIALOG_FILTER = "CudaText projects|*"+PROJECT_EXTENSION
+PROJECT_DIALOG_FILTER = "CudaText projects|*"+PROJECT_EXTENSION
+PROJECT_UNSAVED_NAME = "(Unsaved project)"
+
 NODES = NODE_PROJECT, NODE_DIR, NODE_FILE = range(3)
 
 icon_names = {
@@ -151,6 +152,7 @@ class Command:
         path = dialog()
         if path is not None:
 
+            msg_status("Adding to project: "+path, True)
             self.project["nodes"].append(path)
             self.project["nodes"].sort(key=Command.node_ordering)
             self.action_refresh()
@@ -181,7 +183,7 @@ class Command:
             tree_proc(self.tree, TREE_ITEM_DELETE, 0)
             if self.project_file_path is None:
 
-                project_name = "*Unsaved project*"
+                project_name = PROJECT_UNSAVED_NAME
 
             else:
 
@@ -233,7 +235,7 @@ class Command:
 
         if path is None:
 
-            path = dlg_file(True, "", "", DIALOG_FILTER)
+            path = dlg_file(True, "", "", PROJECT_DIALOG_FILTER)
 
         if path:
 
@@ -244,6 +246,8 @@ class Command:
                 self.add_recent(path)
                 self.action_refresh()
                 self.save_options()
+                
+            msg_status("Project opened: "+path)
 
     def action_add_directory(self):
 
@@ -284,7 +288,7 @@ class Command:
                 project_path = str(self.project_file_path.parent)
             else:
                 project_path = ""
-            path = dlg_file(False, "", project_path, DIALOG_FILTER)
+            path = dlg_file(False, "", project_path, PROJECT_DIALOG_FILTER)
 
         if path:
 
@@ -298,6 +302,8 @@ class Command:
 
                 json.dump(self.project, fout, indent=4)
 
+            msg_status("Project saved")
+            
             if need_refresh:
 
                 self.add_recent(str(path))
@@ -379,8 +385,7 @@ class Command:
 
             self.init_panel()
             self.action_open_project(filename)
-            msg_status("Opened project: "+filename)
-            return False #block opening file
+            return False #block opening
 
     def config(self):
 
