@@ -1,4 +1,8 @@
 
+2016.07.19
++ cmd "Go to file"
++ more statusbar msgs
+
 2016.07.18
 + dlg Commands has items for context-menu items
 + option dialog reworked
