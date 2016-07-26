@@ -15,6 +15,8 @@ PROJECT_UNSAVED_NAME = "(Unsaved project)"
 
 NODES = NODE_PROJECT, NODE_DIR, NODE_FILE = range(3)
 
+global_project_info = {}
+
 icon_names = {
     NODE_PROJECT: "cuda-project-man-icon-project.png",
     NODE_DIR: "cuda-project-man-icon-directory.png",
@@ -164,6 +166,7 @@ class Command:
 
         self.project = dict(nodes=[])
         self.project_file_path = None
+        self.update_global_data()
 
     def add_recent(self, path):
 
@@ -247,6 +250,7 @@ class Command:
                 self.action_refresh()
                 self.save_options()
                 
+            self.update_global_data()
             msg_status("Project opened: "+path)
 
     def action_add_directory(self):
@@ -302,6 +306,7 @@ class Command:
 
                 json.dump(self.project, fout, indent=4)
 
+            self.update_global_data()
             msg_status("Project saved")
             
             if need_refresh:
@@ -309,6 +314,11 @@ class Command:
                 self.add_recent(str(path))
                 self.action_refresh()
                 self.save_options()
+
+    def update_global_data(self):
+        global global_project_info
+        global_project_info['filename'] = str(self.project_file_path) if self.project_file_path else ''
+        global_project_info['nodes'] = self.project['nodes']
 
     def get_info(self, index):
 
