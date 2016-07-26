@@ -1,4 +1,7 @@
 
+2016.07.26
++ add global_project_info for oth plugins
+
 2016.07.19
 + cmd "Go to file"
 + more statusbar msgs
