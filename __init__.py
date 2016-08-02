@@ -38,19 +38,72 @@ def is_filename_mask_listed(name, mask_list):
 class Command:
 
     title = "Project"
-    actions = (
-        "Add directory...",
-        "Add file...",
-        "-",
-        "New project",
-        "Open project...",
-        "Recent projects",
-        "Save project as...",
-        "-",
-        "Refresh",
-        "Remove node",
-        "Clear project",
-    )
+    actions = {
+        None: (
+            "Add directory...",
+            "Add file...",
+            "-",
+            "New project",
+            "Open project...",
+            "Recent projects",
+            "Save project as...",
+            "-",
+            "Refresh",
+            "Remove node",
+            "Clear project",
+        ),
+        NODE_PROJECT: (
+            "Add directory...",
+            "Add file...",
+            "-",
+            "New project",
+            "Open project...",
+            "Recent projects",
+            "Save project as...",
+            "-",
+            "Refresh",
+            "Remove node",
+            "Clear project",
+        ),
+        NODE_DIR: (
+            "New file...",
+            "Rename...",
+            "Delete directory",
+            "New directory...",
+            "Find in directory...",
+            "-",
+            "Add directory...",
+            "Add file...",
+            "-",
+            "New project",
+            "Open project...",
+            "Recent projects",
+            "Save project as...",
+            "-",
+            "Refresh",
+            "Remove node",
+            "Clear project",
+        ),
+        NODE_FILE: (
+            "New file...",
+            "Rename...",
+            "Delete file",
+            "New directory...",
+            "Find in directory...",
+            "-",
+            "Add directory...",
+            "Add file...",
+            "-",
+            "New project",
+            "Open project...",
+            "Recent projects",
+            "Save project as...",
+            "-",
+            "Refresh",
+            "Remove node",
+            "Clear project",
+        ),
+    }
     options = {
         "recent_projects": [],
         "masks_ignore": DEFAULT_MASKS_IGNORE,
@@ -120,7 +173,15 @@ class Command:
         parent = "side:" + self.title
         app_proc(PROC_MENU_CLEAR, parent)
 
-        for name in self.actions:
+        if self.selected is not None:
+
+            i = self.get_info(self.selected).image
+
+        else:
+
+            i = None
+
+        for name in self.actions[i]:
 
             if name == "-":
 
@@ -177,6 +238,76 @@ class Command:
 
         self.options["recent_projects"] = ([path] + recent)[:10]
         self.generate_context_menu()
+
+    def action_new_file(self):
+
+        location = Path(self.get_location_by_index(self.selected))
+        if location.is_file():
+
+            location = location.parent
+
+        result = dlg_file(False, "", str(location), "")
+        if not result:
+
+            return
+
+        path = Path(result)
+        path.touch()
+        self.action_refresh()
+
+    def action_rename(self):
+
+        result = dlg_input("Rename to", "")
+        if not result:
+
+            return
+
+        location = Path(self.get_location_by_index(self.selected))
+        location.replace(location.parent / result)
+        self.action_refresh()
+
+    def action_delete_file(self):
+
+        location = Path(self.get_location_by_index(self.selected))
+        location.unlink()
+        self.action_refresh()
+
+    def action_delete_directory(self, start=None):
+
+        location = start or Path(self.get_location_by_index(self.selected))
+        for path in location.glob("*"):
+
+            if path.is_file():
+
+                path.unlink()
+
+            elif path.is_dir():
+
+                self.action_delete_directory(path)
+
+        location.rmdir()
+        if start is None:
+
+            self.action_refresh()
+
+    def action_new_directory(self):
+
+        location = Path(self.get_location_by_index(self.selected))
+        if location.is_file():
+
+            location = location.parent
+
+        result = dlg_input("New directory", "")
+        if not result:
+
+            return
+
+        (location / result).mkdir()
+        self.action_refresh()
+
+    def action_find_in_directory(self):
+
+        ...
 
     def action_refresh(self, parent=None, nodes=None):
 
@@ -249,7 +380,7 @@ class Command:
                 self.add_recent(path)
                 self.action_refresh()
                 self.save_options()
-                
+
             self.update_global_data()
             msg_status("Project opened: "+path)
 
@@ -308,7 +439,7 @@ class Command:
 
             self.update_global_data()
             msg_status("Project saved")
-            
+
             if need_refresh:
 
                 self.add_recent(str(path))
@@ -343,7 +474,11 @@ class Command:
 
             return
 
-        if id_event == "on_dbl_click":
+        if id_event == "on_sel":
+
+            self.generate_context_menu()
+
+        elif id_event == "on_dbl_click":
 
             info = self.get_info(self.selected)
             if info.image == NODE_FILE:
