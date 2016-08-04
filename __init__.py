@@ -246,14 +246,23 @@ class Command:
 
             location = location.parent
 
-        result = dlg_file(False, "", str(location), "")
+        result = dlg_input("New file:", "")
         if not result:
 
             return
+            
+        if os.sep in result:
+        
+            msg_status("Incorrect file name")
+            return
 
-        path = Path(result)
+        path = location / result
         path.touch()
         self.action_refresh()
+        
+        #open new file
+        self.jump_to_filename(str(path))
+        file_open(str(path))
 
     def action_rename(self):
 
@@ -626,17 +635,10 @@ class Command:
             return
 
         files = []
-        filename_to_find = ''
 
         def callback_collect(fn, item):
             if os.path.isfile(fn):
                 files.append(fn)
-            return True
-
-        def callback_find(fn, item):
-            if fn==filename_to_find:
-                tree_proc(self.tree, TREE_ITEM_SELECT, item)
-                return False
             return True
 
         self.enum_all(callback_collect)
@@ -649,6 +651,17 @@ class Command:
         if res is None:
             return
 
-        filename_to_find = files[res]
-        msg_status('Go to: '+filename_to_find)
+        self.jump_to_filename(files[res])
+        
+    def jump_to_filename(self, filename):
+    
+        filename_to_find = filename
+
+        def callback_find(fn, item):
+            if fn==filename_to_find:
+                tree_proc(self.tree, TREE_ITEM_SELECT, item)
+                return False
+            return True
+
+        msg_status('Jumping to: '+filename)
         self.enum_all(callback_find)
