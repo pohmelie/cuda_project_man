@@ -282,6 +282,7 @@ class Command:
             self.add_node(lambda: str(new_location))
 
         self.action_refresh()
+        self.jump_to_filename(str(new_location))
 
     def action_delete_file(self):
 
