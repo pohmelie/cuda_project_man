@@ -70,7 +70,7 @@ class Command:
             "Rename...",
             "Delete directory",
             "New directory...",
-            "Find in directory...",
+            #"Find in directory...",
             "-",
             "Add directory...",
             "Add file...",
