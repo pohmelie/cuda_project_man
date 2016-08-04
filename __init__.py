@@ -145,7 +145,7 @@ class Command:
 
         if and_activate:
             app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
-            
+
         self.action_refresh()
         self.generate_context_menu()
 
@@ -252,29 +252,32 @@ class Command:
         if not result:
 
             return
-            
+
         if os.sep in result:
-        
+
             msg_status("Incorrect file name")
             return
 
         path = location / result
         path.touch()
         self.action_refresh()
-        
+
         #open new file
         self.jump_to_filename(str(path))
         file_open(str(path))
 
     def action_rename(self):
 
-        result = dlg_input("Rename to", "")
+        location = Path(self.get_location_by_index(self.selected))
+        result = dlg_input("Rename to", str(location.name))
         if not result:
 
             return
 
-        location = Path(self.get_location_by_index(self.selected))
-        location.replace(location.parent / result)
+        new_location = location.parent / result
+        location.replace(new_location)
+        self.action_remove_node()
+        self.add_node(lambda: str(new_location))
         self.action_refresh()
 
     def action_delete_file(self):
@@ -559,10 +562,10 @@ class Command:
 
         if not self.options.get("on_start", False):
             return
-            
+
         and_activate = self.options.get("on_start_activate", False)
         self.init_panel(and_activate)
-        
+
         items = self.options.get("recent_projects", [])
         if items:
             self.action_open_project(items[0])
@@ -658,9 +661,9 @@ class Command:
             return
 
         self.jump_to_filename(files[res])
-        
+
     def jump_to_filename(self, filename):
-    
+
         filename_to_find = filename
 
         def callback_find(fn, item):
