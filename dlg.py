@@ -8,7 +8,8 @@ def dialog_config(op):
     id_ignore = 1
     id_recents = 3
     id_on_start = 4
-    id_ok = 5
+    id_on_start_act = 5
+    id_ok = 6
     
     c1 = chr(1)
     text = '\n'.join([]
@@ -18,8 +19,10 @@ def dialog_config(op):
         +[c1.join(['type=label', 'pos=6,54,500,0', 'cap=&Recent projects:'])]
         +[c1.join(['type=memo', 'pos=6,74,500,180', 
             'val='+'\t'.join(op.get('recent_projects', [])) ])]
-        +[c1.join(['type=check', 'pos=6,186,400,0', 'cap=&Show panel on editor start', 
+        +[c1.join(['type=check', 'pos=6,186,400,0', 'cap=&Load on app start', 
             'val='+('1' if op.get('on_start', False) else '0') ])]
+        +[c1.join(['type=check', 'pos=6,210,400,0', 'cap=&And activate panel on app start', 
+            'val='+('1' if op.get('on_start_activate', False) else '0') ])]
         +[c1.join(['type=button', 'pos=300,300,400,0', 'cap=&OK', 'props=1'])]
         +[c1.join(['type=button', 'pos=406,300,506,0', 'cap=Cancel'])]
     )
@@ -43,5 +46,6 @@ def dialog_config(op):
     op['recent_projects'] = s
 
     op['on_start'] = text[id_on_start]=='1'
+    op['on_start_activate'] = text[id_on_start_act]=='1'
 
     return True
