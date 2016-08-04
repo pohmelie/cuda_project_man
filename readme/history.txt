@@ -1,7 +1,7 @@
 
 2016.08.04
 + cmds differ for selected file/dir/prj
-+ cmd "New file" "Rename file" "Del file"
++ new menu cmds for file/dir selected
 
 2016.07.26
 + add global_project_info for oth plugins
