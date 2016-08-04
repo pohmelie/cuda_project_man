@@ -276,8 +276,11 @@ class Command:
 
         new_location = location.parent / result
         location.replace(new_location)
-        self.action_remove_node()
-        self.add_node(lambda: str(new_location))
+        if location in self.top_nodes.values():
+
+            self.action_remove_node()
+            self.add_node(lambda: str(new_location))
+
         self.action_refresh()
 
     def action_delete_file(self):
