@@ -108,7 +108,6 @@ class Command:
         "recent_projects": [],
         "masks_ignore": DEFAULT_MASKS_IGNORE,
         "on_start": False,
-        "on_start_activate": False,
     }
     tree = None
 
@@ -562,8 +561,8 @@ class Command:
             return
             
         and_activate = self.options.get("on_start_activate", False)
-
         self.init_panel(and_activate)
+        
         items = self.options.get("recent_projects", [])
         if items:
             self.action_open_project(items[0])

@@ -21,7 +21,7 @@ def dialog_config(op):
             'val='+'\t'.join(op.get('recent_projects', [])) ])]
         +[c1.join(['type=check', 'pos=6,186,400,0', 'cap=&Load on app start', 
             'val='+('1' if op.get('on_start', False) else '0') ])]
-        +[c1.join(['type=check', 'pos=6,210,400,0', 'cap=&And activate panel on app start', 
+        +[c1.join(['type=check', 'pos=28,210,400,0', 'cap=&And activate panel', 
             'val='+('1' if op.get('on_start_activate', False) else '0') ])]
         +[c1.join(['type=button', 'pos=300,300,400,0', 'cap=&OK', 'props=1'])]
         +[c1.join(['type=button', 'pos=406,300,506,0', 'cap=Cancel'])]
