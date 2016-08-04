@@ -288,7 +288,17 @@ class Command:
 
         location = Path(self.get_location_by_index(self.selected))
         location.unlink()
-        self.action_refresh()
+
+        if location in self.top_nodes.values():
+        
+            self.action_remove_node()
+            
+        else:
+        
+            self.action_refresh()
+            self.jump_to_filename(str(location.parent))
+            
+        msg_status("Deleted file: "+str(location))
 
     def action_delete_directory(self, start=None):
 
@@ -306,8 +316,17 @@ class Command:
         location.rmdir()
         if start is None:
 
-            self.action_refresh()
+            if location in self.top_nodes.values():
+        
+                self.action_remove_node()
+        
+            else:
+        
+                self.action_refresh()
+                self.jump_to_filename(str(location.parent))
 
+            msg_status("Deleted dir: "+str(location))
+        
     def action_new_directory(self):
 
         location = Path(self.get_location_by_index(self.selected))
