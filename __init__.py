@@ -392,16 +392,22 @@ class Command:
 
         if path:
 
-            with open(path) as fin:
+            if Path(path).exists():
 
-                self.project = json.load(fin)
-                self.project_file_path = Path(path)
-                self.add_recent(path)
-                self.action_refresh()
-                self.save_options()
+                with open(path) as fin:
 
-            self.update_global_data()
-            msg_status("Project opened: "+path)
+                    self.project = json.load(fin)
+                    self.project_file_path = Path(path)
+                    self.add_recent(path)
+                    self.action_refresh()
+                    self.save_options()
+
+                self.update_global_data()
+                msg_status("Project opened: "+path)
+
+            else:
+
+                msg_status("Recent item not found")
 
     def action_add_directory(self):
 
