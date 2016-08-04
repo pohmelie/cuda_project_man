@@ -275,6 +275,10 @@ class Command:
             return
 
         new_location = location.parent / result
+        if location == new_location:
+
+            return
+
         location.replace(new_location)
         if location in self.top_nodes.values():
 
@@ -284,21 +288,23 @@ class Command:
         self.action_refresh()
         self.jump_to_filename(str(new_location))
 
+        msg_status("Renamed to: "+str(new_location.name))
+
     def action_delete_file(self):
 
         location = Path(self.get_location_by_index(self.selected))
         location.unlink()
 
         if location in self.top_nodes.values():
-        
+
             self.action_remove_node()
-            
+
         else:
-        
+
             self.action_refresh()
             self.jump_to_filename(str(location.parent))
-            
-        msg_status("Deleted file: "+str(location))
+
+        msg_status("Deleted file: "+str(location.name))
 
     def action_delete_directory(self, start=None):
 
@@ -317,16 +323,16 @@ class Command:
         if start is None:
 
             if location in self.top_nodes.values():
-        
+
                 self.action_remove_node()
-        
+
             else:
-        
+
                 self.action_refresh()
                 self.jump_to_filename(str(location.parent))
 
-            msg_status("Deleted dir: "+str(location))
-        
+            msg_status("Deleted dir: "+str(location.name))
+
     def action_new_directory(self):
 
         location = Path(self.get_location_by_index(self.selected))
