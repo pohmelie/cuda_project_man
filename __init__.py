@@ -108,6 +108,7 @@ class Command:
         "recent_projects": [],
         "masks_ignore": DEFAULT_MASKS_IGNORE,
         "on_start": False,
+        "on_start_activate": False,
     }
     tree = None
 
@@ -125,7 +126,7 @@ class Command:
 
         self.new_project()
 
-    def init_panel(self):
+    def init_panel(self, and_activate=True):
 
         #already inited?
         if self.tree:
@@ -143,7 +144,9 @@ class Command:
             path = base / icon_names[n]
             tree_proc(self.tree, TREE_ICON_ADD, 0, 0, str(path))
 
-        app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
+        if and_activate:
+            app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
+            
         self.action_refresh()
         self.generate_context_menu()
 
@@ -557,8 +560,10 @@ class Command:
 
         if not self.options.get("on_start", False):
             return
+            
+        and_activate = self.options.get("on_start_activate", False)
 
-        self.init_panel()
+        self.init_panel(and_activate)
         items = self.options.get("recent_projects", [])
         if items:
             self.action_open_project(items[0])
