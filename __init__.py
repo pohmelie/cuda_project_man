@@ -311,8 +311,10 @@ class Command:
 
             return
 
-        (location / result).mkdir()
+        location = location / result
+        location.mkdir()
         self.action_refresh()
+        self.jump_to_filename(str(location))
 
     def action_find_in_directory(self):
 
