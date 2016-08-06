@@ -310,13 +310,9 @@ class Command:
 
         msg_status("Deleted file: "+str(location.name))
 
-    def action_delete_directory(self, start=None):
+    def do_delete_dir(self, start):
 
-        location = start or Path(self.get_location_by_index(self.selected))
-        if msg_box("Delete directory from disk:\n"+str(location), MB_OKCANCEL+MB_ICONWARNING) != ID_OK:
-
-            return
-
+        location = start
         for path in location.glob("*"):
 
             if path.is_file():
@@ -325,21 +321,29 @@ class Command:
 
             elif path.is_dir():
 
-                self.action_delete_directory(path)
+                self.do_delete_dir(path)
 
         location.rmdir()
-        if start is None:
 
-            if location in self.top_nodes.values():
+    def action_delete_directory(self):
 
-                self.action_remove_node()
+        location = Path(self.get_location_by_index(self.selected))
+        if msg_box("Delete directory from disk:\n"+str(location), MB_OKCANCEL+MB_ICONWARNING) != ID_OK:
 
-            else:
+            return
 
-                self.action_refresh()
-                self.jump_to_filename(str(location.parent))
+        self.do_delete_dir(location)
 
-            msg_status("Deleted dir: "+str(location.name))
+        if location in self.top_nodes.values():
+
+            self.action_remove_node()
+
+        else:
+
+            self.action_refresh()
+            self.jump_to_filename(str(location.parent))
+
+        msg_status("Deleted dir: "+str(location.name))
 
     def action_new_directory(self):
 
