@@ -1,4 +1,7 @@
 
+2016.08.06
++ warn msgbox on deleting file/dir
+
 2016.08.04
 + cmds differ for selected file/dir/prj
 + new menu cmds for file/dir selected
