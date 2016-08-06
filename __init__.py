@@ -293,6 +293,10 @@ class Command:
     def action_delete_file(self):
 
         location = Path(self.get_location_by_index(self.selected))
+        if msg_box("Delete file from disk:\n"+str(location), MB_OKCANCEL+MB_ICONWARNING) != ID_OK:
+
+            return
+
         location.unlink()
 
         if location in self.top_nodes.values():
@@ -309,6 +313,10 @@ class Command:
     def action_delete_directory(self, start=None):
 
         location = start or Path(self.get_location_by_index(self.selected))
+        if msg_box("Delete directory from disk:\n"+str(location), MB_OKCANCEL+MB_ICONWARNING) != ID_OK:
+
+            return
+
         for path in location.glob("*"):
 
             if path.is_file():
