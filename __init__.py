@@ -310,9 +310,8 @@ class Command:
 
         msg_status("Deleted file: "+str(location.name))
 
-    def do_delete_dir(self, start):
+    def do_delete_dir(self, location):
 
-        location = start
         for path in location.glob("*"):
 
             if path.is_file():
