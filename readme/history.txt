@@ -1,4 +1,7 @@
 
+2016.08.31
++ ctx-menu item for dirs: "Find in directory", calls dialog in plugin "Find in files"
+
 2016.08.06
 + warn msgbox on deleting file/dir
 
