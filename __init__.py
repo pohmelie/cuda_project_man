@@ -70,7 +70,7 @@ class Command:
             "Rename...",
             "Delete directory",
             "New directory...",
-            #"Find in directory...",
+            "Find in directory...",
             "-",
             "Add directory...",
             "Add file...",
@@ -363,7 +363,15 @@ class Command:
 
     def action_find_in_directory(self):
 
-        ...
+        try:
+            import cuda_find_in_files as fif
+        except ImportError:
+            msg_box('Plugin "Find in Files" not installed, install it first', MB_OK+MB_ICONERROR)
+            return
+            
+        location = str(self.get_location_by_index(self.selected))
+        msg_status('Called "Find in Files" for "%s"' % location)
+        fif.show_dlg(what="", opts={"fold": location})
 
     def action_refresh(self, parent=None, nodes=None):
 
