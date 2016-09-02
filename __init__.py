@@ -627,8 +627,7 @@ class Command:
             msg_status('Project not loaded')
             return
 
-        proj_dir = os.path.dirname(str(self.project_file_path))
-        if dialog_proj_prop(self.project, proj_dir):
+        if dialog_proj_prop(self.project):
 
             self.update_global_data()
             if self.project_file_path:
