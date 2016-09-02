@@ -24,10 +24,10 @@ def dialog_config(op):
         +[c1.join(['type=check', 'pos=28,210,400,0', 'cap=&And activate panel',
             'val='+('1' if op.get('on_start_activate', False) else '0') ])]
         +[c1.join(['type=button', 'pos=300,300,400,0', 'cap=&OK', 'props=1'])]
-        +[c1.join(['type=button', 'pos=406,300,506,0', 'cap=Cancel'])]
+        +[c1.join(['type=button', 'pos=406,300,502,0', 'cap=Cancel'])]
     )
 
-    res = dlg_custom('Project Manager options', 512, 330, text)
+    res = dlg_custom('Project Manager options', 508, 330, text)
     if res is None:
         return
 
@@ -64,11 +64,11 @@ def dialog_proj_prop(prop, proj_dir):
 
     c1 = chr(1)
     text = '\n'.join([]
-        +[c1.join(['type=label', 'pos=6,6,500,0', 'cap=&Variables in form Name=Value'])]
+        +[c1.join(['type=label', 'pos=6,6,500,0', 'cap=&Variables (in form Name=Value)'])]
         +[c1.join(['type=memo', 'pos=6,26,500,180',
             'val='+'\t'.join(list_vars)
             ])]
-        +[c1.join(['type=label', 'pos=6,186,500,0', 'cap=&Paths, read-only (main file: change in context menu)'])]
+        +[c1.join(['type=label', 'pos=6,186,500,0', 'cap=&Path variables, read-only (main file: change in context menu)'])]
         +[c1.join(['type=memo', 'pos=6,206,500,290', 'props=1,0,1',
             'val='+'\t'.join(list_paths)
             ])]
