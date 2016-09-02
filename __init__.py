@@ -489,6 +489,7 @@ class Command:
 
         path = self.get_location_by_index(self.selected)
         self.project["mainfile"] = str(path)
+        self.update_global_data()
 
         if self.project_file_path:
 
@@ -628,6 +629,8 @@ class Command:
 
         proj_dir = os.path.dirname(str(self.project_file_path))
         if dialog_proj_prop(self.project, proj_dir):
+
+            self.update_global_data()
             if self.project_file_path:
 
                 self.action_save_project_as(self.project_file_path)
