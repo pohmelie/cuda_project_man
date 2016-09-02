@@ -1,4 +1,9 @@
 
+2016.09.02
++ Plugins item "Project properties"
++ ctx menu item "Set as main file"
++ proj saves vars + mainfile
+
 2016.08.31
 + ctx-menu item for dirs: "Find in directory", calls dialog in plugin "Find in files"
 
