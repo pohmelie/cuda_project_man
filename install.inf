@@ -37,6 +37,11 @@ method=_
 
 [item51]
 section=commands
+caption=&Project Manager\&Project properties...
+method=config_proj
+
+[item52]
+section=commands
 caption=&Project Manager\&Config...
 method=config
 

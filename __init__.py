@@ -102,6 +102,7 @@ class Command:
             "Refresh",
             "Remove node",
             "Clear project",
+            "Set as main file",
         ),
     }
     options = {
@@ -368,7 +369,7 @@ class Command:
         except ImportError:
             msg_box('Plugin "Find in Files" not installed, install it first', MB_OK+MB_ICONERROR)
             return
-            
+
         location = str(self.get_location_by_index(self.selected))
         msg_status('Called "Find in Files" for "%s"' % location)
         fif.show_dlg(what="", opts={"fold": location})
@@ -484,6 +485,15 @@ class Command:
         self.project["nodes"].clear()
         self.action_refresh()
 
+    def action_set_as_main_file(self):
+
+        path = self.get_location_by_index(self.selected)
+        self.project["mainfile"] = str(path)
+
+        if self.project_file_path:
+
+            self.action_save_project_as(self.project_file_path)
+
     def action_save_project_as(self, path=None):
 
         need_refresh = path is None
@@ -520,6 +530,8 @@ class Command:
         global global_project_info
         global_project_info['filename'] = str(self.project_file_path) if self.project_file_path else ''
         global_project_info['nodes'] = self.project['nodes']
+        global_project_info['vars'] = self.project.get('vars', [])
+        global_project_info['mainfile'] = self.project.get('mainfile', '')
 
     def get_info(self, index):
 
@@ -606,6 +618,19 @@ class Command:
 
         if dialog_config(self.options):
             self.save_options()
+
+    def config_proj(self):
+
+        if not self.tree:
+
+            msg_status('Project not loaded')
+            return
+
+        proj_dir = os.path.dirname(str(self.project_file_path))
+        if dialog_proj_prop(self.project, proj_dir):
+            if self.project_file_path:
+
+                self.action_save_project_as(self.project_file_path)
 
     def is_filename_ignored(self, fn):
 
