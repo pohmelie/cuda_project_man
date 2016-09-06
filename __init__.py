@@ -17,6 +17,25 @@ NODES = NODE_PROJECT, NODE_DIR, NODE_FILE = range(3)
 
 global_project_info = {}
 
+def project_variables():
+    """
+    gives dict with "project variables", which is ok for using from other plugins,
+    e.g. ExtTools.
+    add to names {} or $() if you want.
+    predefined variable is ProjMainFile.
+    defined by user using right-click menu in ProjMan.
+    other variables can be any. defined by user in Proj Props dialog of ProjMan.
+    """
+    res = {}
+    data = global_project_info
+    res['ProjMainFile'] = data.get('mainfile', '')
+    data = global_project_info.get('vars', [])
+    for item in data:
+        s1, s2 = item.split('=', maxsplit=1)
+        res[s1] = s2
+    return res
+
+
 icon_names = {
     NODE_PROJECT: "cuda-project-man-icon-project.png",
     NODE_DIR: "cuda-project-man-icon-directory.png",
