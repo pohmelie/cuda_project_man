@@ -93,3 +93,9 @@ section=commands
 caption=&Project Manager\Context menu\Clear project
 method=contextmenu_clear_proj
 menu=0
+
+[item108]
+section=commands
+caption=&Project Manager\Context menu\Set as main file
+method=contextmenu_set_as_main_file
+menu=0

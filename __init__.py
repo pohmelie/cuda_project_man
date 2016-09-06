@@ -711,6 +711,11 @@ class Command:
         self.init_panel()
         self.action_clear_project()
 
+    def contextmenu_set_as_main_file(self):
+
+        self.init_panel()
+        self.action_set_as_main_file()
+
     def enum_all(self, callback):
         """
         Callback for all items.
