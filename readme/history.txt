@@ -1,4 +1,7 @@
 
+2016.09.06
++ add project_variables() api
+
 2016.09.02
 + Plugins item "Project properties"
 + ctx menu item "Set as main file"
