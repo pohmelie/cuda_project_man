@@ -22,12 +22,13 @@ def project_variables():
     gives dict with "project variables", which is ok for using from other plugins,
     e.g. ExtTools.
     add to names {} or $() if you want.
-    predefined variable is ProjMainFile.
-    defined by user using right-click menu in ProjMan.
-    other variables can be any. defined by user in Proj Props dialog of ProjMan.
+    1) predefined var ProjMainFile (defined by right-click menu in ProjMan)
+    2) predefined var ProjDir (dir of .cuda-proj file)
+    3) other vars are defined by user in Proj Properties dialog.
     """
     res = {}
     data = global_project_info
+    res['ProjDir'] = os.path.dirname(data.get('filename', ''))
     res['ProjMainFile'] = data.get('mainfile', '')
     data = global_project_info.get('vars', [])
     for item in data:
