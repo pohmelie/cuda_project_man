@@ -45,6 +45,12 @@ section=commands
 caption=&Project Manager\&Config...
 method=config
 
+[item53]
+section=commands
+caption=&Project Manager\Focus Project panel
+method=focus_panel
+menu=0
+
 
 [item100]
 section=commands
