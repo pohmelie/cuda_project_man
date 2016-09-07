@@ -1,4 +1,7 @@
 
+2016.09.07
++ commands-item "Focus Project panel"
+
 2016.09.06
 + add project_variables() api
 
