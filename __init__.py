@@ -26,7 +26,7 @@ def project_variables():
     2) predefined var ProjDir (dir of .cuda-proj file)
     3) other vars are defined by user in Proj Properties dialog.
     """
-    res = {}
+    res = collections.OrderedDict()
     data = global_project_info
     res['ProjDir'] = os.path.dirname(data.get('filename', ''))
     res['ProjMainFile'] = data.get('mainfile', '')
