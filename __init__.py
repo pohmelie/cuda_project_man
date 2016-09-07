@@ -176,6 +176,10 @@ class Command:
 
             self.init_panel()
 
+        else:
+
+            ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
+
     def focus_panel(self):
 
         if not self.tree:

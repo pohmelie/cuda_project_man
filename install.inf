@@ -11,17 +11,22 @@ events=on_panel,on_open_pre,on_start
 
 [item2]
 section=commands
-caption=&Project Manager\&Show panel
+caption=&Project Manager\&Show Project panel
 method=show_panel
 
 [item3]
+section=commands
+caption=&Project Manager\&Focus Project panel
+method=focus_panel
+
+[item9]
 section=commands
 caption=&Project Manager\Open &recent project...
 method=menu_recents
 
 [item10]
 section=commands
-caption=&Project Manager\New project/ &Open folder...
+caption=&Project Manager\New project, &Open folder...
 method=new_project_open_dir
 
 [item15]
@@ -44,12 +49,6 @@ method=config_proj
 section=commands
 caption=&Project Manager\&Config...
 method=config
-
-[item53]
-section=commands
-caption=&Project Manager\Focus Project panel
-method=focus_panel
-menu=0
 
 
 [item100]
