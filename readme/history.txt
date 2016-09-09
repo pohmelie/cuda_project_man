@@ -1,4 +1,7 @@
 
+2016.09.09
+* moved icon-files
+
 2016.09.07
 + commands-item "Focus Project panel"
 
