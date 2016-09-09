@@ -38,9 +38,9 @@ def project_variables():
 
 
 icon_names = {
-    NODE_PROJECT: "cuda-project-man-icon-project.png",
-    NODE_DIR: "cuda-project-man-icon-directory.png",
-    NODE_FILE: "cuda-project-man-icon-file.png",
+    NODE_PROJECT: "icon-project.png",
+    NODE_DIR: "icon-dir.png",
+    NODE_FILE: "icon-file.png",
 }
 
 NodeInfo = collections.namedtuple("NodeInfo", "caption index image level")
@@ -161,7 +161,7 @@ class Command:
         base = Path(__file__).parent
         for n in NODES:
 
-            path = base / icon_names[n]
+            path = base / 'icons' / icon_names[n]
             tree_proc(self.tree, TREE_ICON_ADD, 0, 0, str(path))
 
         if and_activate:
