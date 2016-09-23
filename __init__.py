@@ -152,7 +152,6 @@ class Command:
         if self.tree:
             return
 
-        ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
         app_proc(PROC_SIDEPANEL_ADD, self.title + ",-1,tree")
 
         self.tree = app_proc(PROC_SIDEPANEL_GET_CONTROL, self.title)
@@ -165,6 +164,7 @@ class Command:
             tree_proc(self.tree, TREE_ICON_ADD, 0, 0, str(path))
 
         if and_activate:
+            ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
             app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
         self.action_refresh()
