@@ -73,15 +73,15 @@ class Command:
         ("Clear project"        , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Remove node"          , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         
-        ("New file..."          , "sel_dir", [NODE_DIR]),
-        ("Rename..."            , "sel_dir", [NODE_DIR]),
-        ("Delete directory"     , "sel_dir", [NODE_DIR]),
-        ("New directory..."     , "sel_dir", [NODE_DIR]),
-        ("Find in directory..." , "sel_dir", [NODE_DIR]),
+        ("New file..."          , "dir", [NODE_DIR]),
+        ("Rename..."            , "dir", [NODE_DIR]),
+        ("Delete directory"     , "dir", [NODE_DIR]),
+        ("New directory..."     , "dir", [NODE_DIR]),
+        ("Find in directory..." , "dir", [NODE_DIR]),
 
-        ("Rename..."            , "sel_file", [NODE_FILE]),
-        ("Delete file"          , "sel_file", [NODE_FILE]),
-        ("Set as main file"     , "sel_file", [NODE_FILE]),
+        ("Rename..."            , "file", [NODE_FILE]),
+        ("Delete file"          , "file", [NODE_FILE]),
+        ("Set as main file"     , "file", [NODE_FILE]),
             
         ("-"                    , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Refresh"              , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
@@ -195,8 +195,8 @@ class Command:
             
             if item_parent=="proj": menu_use = menu_proj
             elif item_parent=="nodes": menu_use = menu_nodes
-            elif item_parent=="sel_file": menu_use = menu_file
-            elif item_parent=="sel_dir": menu_use = menu_dir
+            elif item_parent=="file": menu_use = menu_file
+            elif item_parent=="dir": menu_use = menu_dir
             else: menu_use = menu_all 
             
             if item_caption in ["-", "Recent projects"]:
