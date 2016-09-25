@@ -58,73 +58,30 @@ def is_filename_mask_listed(name, mask_list):
 class Command:
 
     title = "Project"
-    actions = {
-        None: (
-            "Add directory...",
-            "Add file...",
-            "-",
-            "New project",
-            "Open project...",
-            "Recent projects",
-            "Save project as...",
-            "-",
-            "Refresh",
-            "Remove node",
-            "Clear project",
-        ),
-        NODE_PROJECT: (
-            "Add directory...",
-            "Add file...",
-            "-",
-            "New project",
-            "Open project...",
-            "Recent projects",
-            "Save project as...",
-            "-",
-            "Refresh",
-            "Remove node",
-            "Clear project",
-        ),
-        NODE_DIR: (
-            "New file...",
-            "Rename...",
-            "Delete directory",
-            "New directory...",
-            "Find in directory...",
-            "-",
-            "Add directory...",
-            "Add file...",
-            "-",
-            "New project",
-            "Open project...",
-            "Recent projects",
-            "Save project as...",
-            "-",
-            "Refresh",
-            "Remove node",
-            "Clear project",
-        ),
-        NODE_FILE: (
-            #"New file...",
-            "Rename...",
-            "Delete file",
-            #"New directory...",
-            #"Find in directory...",
-            "-",
-            "Add directory...",
-            "Add file...",
-            "-",
-            "New project",
-            "Open project...",
-            "Recent projects",
-            "Save project as...",
-            "-",
-            "Refresh",
-            "Remove node",
-            "Clear project",
-            "Set as main file",
-        ),
-    }
+    menuitems = (
+        ("New project", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Open project...", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Recent projects", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Save project as...", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        
+        ("Add directory...", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Add file...", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Clear project", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Remove node", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        
+        ("New file...", "sel_dir", [NODE_DIR]),
+        ("Rename...", "sel_dir", [NODE_DIR]),
+        ("Delete directory", "sel_dir", [NODE_DIR]),
+        ("New directory...", "sel_dir", [NODE_DIR]),
+        ("Find in directory...", "sel_dir", [NODE_DIR]),
+
+        ("Rename...", "sel_file", [NODE_FILE]),
+        ("Delete file", "sel_file", [NODE_FILE]),
+        ("Set as main file", "sel_file", [NODE_FILE]),
+            
+        ("-", "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Refresh", "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+    )
     options = {
         "recent_projects": [],
         "masks_ignore": DEFAULT_MASKS_IGNORE,
@@ -208,39 +165,55 @@ class Command:
 
     def generate_context_menu(self):
 
-        parent = "side:" + self.title
-        app_proc(PROC_MENU_CLEAR, parent)
-
         if self.selected is not None:
 
-            i = self.get_info(self.selected).image
+            node_type = self.get_info(self.selected).image
 
         else:
 
-            i = None
+            node_type = None
 
-        for name in self.actions[i]:
+        menu_all = "side:" + self.title
+        app_proc(PROC_MENU_CLEAR, menu_all)
+        menu_proj = self.add_context_menu_node(menu_all, "0", "Project file")
+        menu_nodes = self.add_context_menu_node(menu_all, "0", "Root nodes")
+        if node_type==NODE_FILE:
+            menu_file = self.add_context_menu_node(menu_all, "0", "Selected file")
+        if node_type==NODE_DIR:
+            menu_dir = self.add_context_menu_node(menu_all, "0", "Selected directory")
 
-            if name == "-":
+        for item in self.menuitems:
 
-                self.add_context_menu_node(parent, "0", name)
+            item_caption = item[0]
+            item_parent = item[1]
+            item_types = item[2]
+            if node_type not in item_types: continue
+            
+            if item_parent=="proj": menu_use = menu_proj
+            elif item_parent=="nodes": menu_use = menu_nodes
+            elif item_parent=="sel_file": menu_use = menu_file
+            elif item_parent=="sel_dir": menu_use = menu_dir
+            else: menu_use = menu_all 
+            
+            if item_caption in ["-", "Recent projects"]:
+            
+                action_name = ""
+                action = ""
+                
+            else:
+            
+                action_name = item_caption.lower().replace(" ", "_").rstrip(".")
+                action = "cuda_project_man,action_" + action_name
+                
+            menu_added = self.add_context_menu_node(menu_use, action, item_caption)
 
-            elif name == "Recent projects":
+            if item_caption == "Recent projects":
 
-                sub_parent = self.add_context_menu_node(parent, "0", name)
                 for path in self.options["recent_projects"]:
 
-                    action = str.format(
-                        "cuda_project_man,action_open_project,r'{}'",
-                        path,
-                    )
-                    self.add_context_menu_node(sub_parent, action, path)
+                    action = str.format("cuda_project_man,action_open_project,r'{}'", path)
+                    self.add_context_menu_node(menu_added, action, path)
 
-            else:
-
-                action_name = name.lower().replace(" ", "_").rstrip(".")
-                action = "cuda_project_man,action_" + action_name
-                self.add_context_menu_node(parent, action, name)
 
     @staticmethod
     def node_ordering(node):
