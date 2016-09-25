@@ -59,28 +59,32 @@ class Command:
 
     title = "Project"
     menuitems = (
-        ("New project", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        ("Open project...", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        ("Recent projects", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        ("Save project as...", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("New project"          , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Open project..."      , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Recent projects"      , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Save project as..."   , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("-"                    , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Go to file..."        , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Project properties...", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Config..."            , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         
-        ("Add directory...", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        ("Add file...", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        ("Clear project", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        ("Remove node", "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Add directory..."     , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Add file..."          , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Clear project"        , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Remove node"          , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         
-        ("New file...", "sel_dir", [NODE_DIR]),
-        ("Rename...", "sel_dir", [NODE_DIR]),
-        ("Delete directory", "sel_dir", [NODE_DIR]),
-        ("New directory...", "sel_dir", [NODE_DIR]),
-        ("Find in directory...", "sel_dir", [NODE_DIR]),
+        ("New file..."          , "sel_dir", [NODE_DIR]),
+        ("Rename..."            , "sel_dir", [NODE_DIR]),
+        ("Delete directory"     , "sel_dir", [NODE_DIR]),
+        ("New directory..."     , "sel_dir", [NODE_DIR]),
+        ("Find in directory..." , "sel_dir", [NODE_DIR]),
 
-        ("Rename...", "sel_file", [NODE_FILE]),
-        ("Delete file", "sel_file", [NODE_FILE]),
-        ("Set as main file", "sel_file", [NODE_FILE]),
+        ("Rename..."            , "sel_file", [NODE_FILE]),
+        ("Delete file"          , "sel_file", [NODE_FILE]),
+        ("Set as main file"     , "sel_file", [NODE_FILE]),
             
-        ("-", "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        ("Refresh", "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("-"                    , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
+        ("Refresh"              , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
     )
     options = {
         "recent_projects": [],
@@ -534,6 +538,18 @@ class Command:
                 self.add_recent(str(path))
                 self.action_refresh()
                 self.save_options()
+
+    def action_go_to_file(self):
+        
+        self.menu_goto()
+        
+    def action_project_properties(self):
+    
+        self.config_proj()
+        
+    def action_config(self):
+    
+        self.config()
 
     def update_global_data(self):
         global global_project_info
