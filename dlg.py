@@ -8,8 +8,7 @@ def dialog_config(op):
     id_ignore = 1
     id_recents = 3
     id_on_start = 4
-    id_on_start_act = 5
-    id_ok = 6
+    id_ok = 5
 
     c1 = chr(1)
     text = '\n'.join([]
@@ -21,13 +20,11 @@ def dialog_config(op):
             'val='+'\t'.join(op.get('recent_projects', [])) ])]
         +[c1.join(['type=check', 'pos=6,186,400,0', 'cap=&Load on app start',
             'val='+('1' if op.get('on_start', False) else '0') ])]
-        +[c1.join(['type=check', 'pos=28,210,400,0', 'cap=&And activate panel',
-            'val='+('1' if op.get('on_start_activate', False) else '0') ])]
-        +[c1.join(['type=button', 'pos=300,270,400,0', 'cap=&OK', 'props=1'])]
-        +[c1.join(['type=button', 'pos=406,270,502,0', 'cap=Cancel'])]
+        +[c1.join(['type=button', 'pos=300,230,400,0', 'cap=&OK', 'props=1'])]
+        +[c1.join(['type=button', 'pos=406,230,502,0', 'cap=Cancel'])]
     )
 
-    res = dlg_custom('Project Manager options', 508, 300, text)
+    res = dlg_custom('Project Manager options', 508, 260, text)
     if res is None:
         return
 
@@ -46,7 +43,6 @@ def dialog_config(op):
     op['recent_projects'] = s
 
     op['on_start'] = text[id_on_start]=='1'
-    op['on_start_activate'] = text[id_on_start_act]=='1'
 
     return True
 

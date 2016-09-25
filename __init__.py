@@ -125,23 +125,21 @@ class Command:
             tree_proc(self.tree, TREE_ICON_ADD, 0, 0, str(path))
 
         if and_activate:
-            ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
-            app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
+        
+            self.do_show(True)
 
         self.action_refresh()
         self.generate_context_menu()
 
     def show_panel(self):
-
-        if not self.tree:
-
-            self.init_panel()
-
-        else:
-
-            ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
+    
+        self.do_show(False)
 
     def focus_panel(self):
+    
+        self.do_show(True)
+    
+    def do_show(self, and_focus):
 
         if not self.tree:
 
@@ -150,7 +148,10 @@ class Command:
         else:
 
             ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
-            app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
+            
+            if and_focus:
+            
+                app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
     @property
     def selected(self):
