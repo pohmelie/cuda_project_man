@@ -1,4 +1,7 @@
 
+2016.09.25
++ new context-menu, compact
+
 2016.09.09
 * moved icon-files
 
