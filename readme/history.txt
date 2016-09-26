@@ -1,6 +1,7 @@
 
-2016.09.25
+2016.09.26
 + new context-menu, compact
+- must force UTF8, for Mac
 
 2016.09.09
 * moved icon-files
