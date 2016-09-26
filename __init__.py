@@ -101,7 +101,7 @@ class Command:
 
         if self.options_filename.exists():
 
-            with self.options_filename.open() as fin:
+            with self.options_filename.open(encoding='utf8') as fin:
 
                 self.options = json.load(fin)
 
@@ -453,7 +453,7 @@ class Command:
 
             if Path(path).exists():
 
-                with open(path) as fin:
+                with open(path, encoding='utf8') as fin:
 
                     self.project = json.load(fin)
                     self.project_file_path = Path(path)
@@ -527,7 +527,7 @@ class Command:
                 path = path.parent / (path.name + PROJECT_EXTENSION)
 
             self.project_file_path = path
-            with path.open("w") as fout:
+            with path.open("w", encoding='utf8') as fout:
 
                 json.dump(self.project, fout, indent=4)
 
@@ -596,7 +596,7 @@ class Command:
 
     def save_options(self):
 
-        with self.options_filename.open(mode="w") as fout:
+        with self.options_filename.open(mode="w", encoding='utf8') as fout:
 
             json.dump(self.options, fout, indent=4)
 
