@@ -729,7 +729,7 @@ class Command:
 
         items = tree_proc(self.tree, TREE_ITEM_ENUM, 0)
         if items:
-            self.enum_subitems(items[0][0], callback)
+            return self.enum_subitems(items[0][0], callback)
 
     def enum_subitems(self, item, callback):
         """
@@ -784,10 +784,17 @@ class Command:
             return True
 
         msg_status('Jumping to: '+filename)
-        self.enum_all(callback_find)
+        return self.enum_all(callback_find)
 
-    def sync_to_current(self):
+    def sync_to_ed(self):
+
+        if not self.tree:
+
+            msg_status('Project not loaded')
+            return
 
         fn = ed.get_filename()
         if fn:
-           self.jump_to_filename(fn)
+            if self.jump_to_filename(fn): #gets False if found
+                msg_status('Cannot jump to file: '+fn)
+  
