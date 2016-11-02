@@ -67,12 +67,12 @@ class Command:
         ("Go to file..."        , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Project properties...", "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Config..."            , "proj", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        
+
         ("Add directory..."     , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Add file..."          , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Clear project"        , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Remove node"          , "nodes", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
-        
+
         ("New file..."          , "dir", [NODE_DIR]),
         ("Rename..."            , "dir", [NODE_DIR]),
         ("Delete directory"     , "dir", [NODE_DIR]),
@@ -82,7 +82,7 @@ class Command:
         ("Rename..."            , "file", [NODE_FILE]),
         ("Delete file"          , "file", [NODE_FILE]),
         ("Set as main file"     , "file", [NODE_FILE]),
-            
+
         ("-"                    , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
         ("Refresh"              , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE]),
     )
@@ -125,20 +125,20 @@ class Command:
             tree_proc(self.tree, TREE_ICON_ADD, 0, 0, str(path))
 
         if and_activate:
-        
+
             self.do_show(True)
 
         self.action_refresh()
         self.generate_context_menu()
 
     def show_panel(self):
-    
+
         self.do_show(False)
 
     def focus_panel(self):
-    
+
         self.do_show(True)
-    
+
     def do_show(self, and_focus):
 
         if not self.tree:
@@ -148,9 +148,9 @@ class Command:
         else:
 
             ed.cmd(cudatext_cmd.cmd_ShowSidePanelAsIs)
-            
+
             if and_focus:
-            
+
                 app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
     @property
@@ -193,23 +193,23 @@ class Command:
             item_parent = item[1]
             item_types = item[2]
             if node_type not in item_types: continue
-            
+
             if item_parent=="proj": menu_use = menu_proj
             elif item_parent=="nodes": menu_use = menu_nodes
             elif item_parent=="file": menu_use = menu_file
             elif item_parent=="dir": menu_use = menu_dir
-            else: menu_use = menu_all 
-            
+            else: menu_use = menu_all
+
             if item_caption in ["-", "Recent projects"]:
-            
+
                 action_name = ""
                 action = ""
-                
+
             else:
-            
+
                 action_name = item_caption.lower().replace(" ", "_").rstrip(".")
                 action = "cuda_project_man,action_" + action_name
-                
+
             menu_added = self.add_context_menu_node(menu_use, action, item_caption)
 
             if item_caption == "Recent projects":
@@ -541,15 +541,15 @@ class Command:
                 self.save_options()
 
     def action_go_to_file(self):
-        
+
         self.menu_goto()
-        
+
     def action_project_properties(self):
-    
+
         self.config_proj()
-        
+
     def action_config(self):
-    
+
         self.config()
 
     def update_global_data(self):
@@ -785,3 +785,9 @@ class Command:
 
         msg_status('Jumping to: '+filename)
         self.enum_all(callback_find)
+
+    def sync_to_current(self):
+
+        fn = ed.get_filename()
+        if fn:
+           self.jump_to_filename(fn)
