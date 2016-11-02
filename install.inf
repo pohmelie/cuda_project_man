@@ -34,6 +34,11 @@ section=commands
 caption=&Project Manager\&Go to file...
 method=menu_goto
 
+[item16]
+section=commands
+caption=&Project Manager\&Sync to current file
+method=sync_to_current
+
 
 [item50]
 section=commands
