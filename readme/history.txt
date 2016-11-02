@@ -1,4 +1,7 @@
 
+2016.11.02
++ cmd "sync to curr file"
+
 2016.09.26
 + new context-menu, compact
 - must force UTF8, for Mac
