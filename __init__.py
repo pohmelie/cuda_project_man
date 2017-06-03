@@ -90,6 +90,7 @@ class Command:
         "recent_projects": [],
         "masks_ignore": DEFAULT_MASKS_IGNORE,
         "on_start": False,
+        "directory_lazy_reveal": False,
     }
     tree = None
 
@@ -355,9 +356,10 @@ class Command:
             if nodes is self.project["nodes"]:
                 self.top_nodes[index] = path
 
-            if path.is_dir():
-                sub_nodes = sorted(path.iterdir(), key=Command.node_ordering)
-                self.action_refresh(index, sub_nodes)
+            if not self.options["directory_lazy_reveal"]:
+                if path.is_dir():
+                    sub_nodes = sorted(path.iterdir(), key=Command.node_ordering)
+                    self.action_refresh(index, sub_nodes)
 
         if unfold:
             tree_proc(self.tree, TREE_ITEM_UNFOLD, parent)
@@ -478,8 +480,13 @@ class Command:
             self.generate_context_menu()
         elif id_event == "on_dbl_click":
             info = self.get_info(self.selected)
-                path = self.get_location_by_index(self.selected)
+            path = self.get_location_by_index(self.selected)
+            if info.image == NODE_FILE:
                 file_open(str(path))
+            elif info.image == NODE_DIR:
+                if self.options["directory_lazy_reveal"]:
+                    self.action_refresh(self.selected, path.iterdir())
+                    tree_proc(self.tree, TREE_ITEM_UNFOLD, self.selected)
 
     def save_options(self):
         with self.options_filename.open(mode="w", encoding='utf8') as fout:
