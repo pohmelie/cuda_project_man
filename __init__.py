@@ -478,15 +478,17 @@ class Command:
 
         if id_event == "on_sel":
             self.generate_context_menu()
+            info = self.get_info(self.selected)
+            path = self.get_location_by_index(self.selected)
+            if info.image == NODE_DIR:
+                if self.options["directory_lazy_reveal"]:
+                    self.action_refresh(self.selected, path.iterdir())
+                    tree_proc(self.tree, TREE_ITEM_UNFOLD, self.selected)
         elif id_event == "on_dbl_click":
             info = self.get_info(self.selected)
             path = self.get_location_by_index(self.selected)
             if info.image == NODE_FILE:
                 file_open(str(path))
-            elif info.image == NODE_DIR:
-                if self.options["directory_lazy_reveal"]:
-                    self.action_refresh(self.selected, path.iterdir())
-                    tree_proc(self.tree, TREE_ITEM_UNFOLD, self.selected)
 
     def save_options(self):
         with self.options_filename.open(mode="w", encoding='utf8') as fout:
