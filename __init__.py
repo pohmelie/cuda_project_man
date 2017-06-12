@@ -12,6 +12,7 @@ import cudatext_cmd
 PROJECT_EXTENSION = ".cuda-proj"
 PROJECT_DIALOG_FILTER = "CudaText projects|*"+PROJECT_EXTENSION
 PROJECT_UNSAVED_NAME = "(Unsaved project)"
+NEED_API = '1.0.181'
 
 NODES = NODE_PROJECT, NODE_DIR, NODE_FILE = range(3)
 
@@ -107,6 +108,10 @@ class Command:
         # already inited?
         if self.tree:
             return
+            
+        if app_api_version() < NEED_API:
+            msg_box('Project Manager needs newer app version', MB_OK+MB_ICONERROR)
+            return
 
         app_proc(PROC_SIDEPANEL_ADD, self.title + ",-1,tree")
         self.tree = app_proc(PROC_SIDEPANEL_GET_CONTROL, self.title)
@@ -141,13 +146,13 @@ class Command:
         return tree_proc(self.tree, TREE_ITEM_GET_SELECTED)
 
     def add_context_menu_node(self, parent, action, name):
-        desc = str.format(
-            "{};{};{};-1",
-            parent,
-            action,
-            name,
-        )
-        return app_proc(PROC_MENU_ADD, desc)
+
+        return menu_proc(parent, MENU_ADD, command=action, caption=name)
+
+
+
+
+
 
     def generate_context_menu(self):
         if self.selected is not None:
@@ -156,7 +161,7 @@ class Command:
             node_type = None
 
         menu_all = "side:" + self.title
-        app_proc(PROC_MENU_CLEAR, menu_all)
+        menu_proc(menu_all, MENU_CLEAR)
         menu_proj = self.add_context_menu_node(menu_all, "0", "Project file")
         menu_nodes = self.add_context_menu_node(menu_all, "0", "Root nodes")
         if node_type == NODE_FILE:
@@ -186,12 +191,13 @@ class Command:
                 action = ""
             else:
                 action_name = item_caption.lower().replace(" ", "_").rstrip(".")
-                action = "cuda_project_man,action_" + action_name
+                action = "cuda_project_man.action_" + action_name
 
             menu_added = self.add_context_menu_node(menu_use, action, item_caption)
             if item_caption == "Recent projects":
                 for path in self.options["recent_projects"]:
-                    action = str.format("cuda_project_man,action_open_project,r'{}'", path)
+
+                    action = str.format("module=cuda_project_man;cmd=action_open_project;info=r'{}';", path)
                     self.add_context_menu_node(menu_added, action, path)
 
     @staticmethod
@@ -356,7 +362,7 @@ class Command:
             if nodes is self.project["nodes"]:
                 self.top_nodes[index] = path
 
-            if not self.options["directory_lazy_reveal"]:
+            if not self.options.get("directory_lazy_reveal", False):
                 if path.is_dir():
                     sub_nodes = sorted(path.iterdir(), key=Command.node_ordering)
                     self.action_refresh(index, sub_nodes)
@@ -368,7 +374,8 @@ class Command:
         self.new_project()
         self.action_refresh()
 
-    def action_open_project(self, path=None):
+    def action_open_project(self, info=None):
+        path = info
         if path is None:
             path = dlg_file(True, "", "", PROJECT_DIALOG_FILTER)
         if path:
@@ -468,7 +475,7 @@ class Command:
             index = tree_proc(self.tree, TREE_ITEM_GET_PARENT, index)
 
         path.reverse()
-        full_path = Path(self.top_nodes[index] / str.join(os.sep, path))
+        full_path = Path(self.top_nodes.get(index, '') / str.join(os.sep, path))
 
         return full_path
 
@@ -481,7 +488,7 @@ class Command:
             info = self.get_info(self.selected)
             path = self.get_location_by_index(self.selected)
             if info.image == NODE_DIR:
-                if self.options["directory_lazy_reveal"]:
+                if self.options.get("directory_lazy_reveal", False):
                     self.action_refresh(self.selected, path.iterdir())
                     tree_proc(self.tree, TREE_ITEM_UNFOLD, self.selected)
         elif id_event == "on_dbl_click":
