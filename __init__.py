@@ -12,7 +12,7 @@ import cudatext_cmd
 PROJECT_EXTENSION = ".cuda-proj"
 PROJECT_DIALOG_FILTER = "CudaText projects|*"+PROJECT_EXTENSION
 PROJECT_UNSAVED_NAME = "(Unsaved project)"
-NEED_API = '1.0.181'
+NEED_API = '1.0.184'
 
 NODES = NODE_PROJECT, NODE_DIR, NODE_FILE = range(3)
 
@@ -110,12 +110,28 @@ class Command:
             return
 
         if app_api_version() < NEED_API:
-            msg_box('Project Manager needs newer app version', MB_OK+MB_ICONERROR)
+            msg_box('Project Manager needs newer app version', MB_OK + MB_ICONERROR)
             return
 
-        app_proc(PROC_SIDEPANEL_ADD, self.title + ",-1,tree")
-        self.tree = app_proc(PROC_SIDEPANEL_GET_CONTROL, self.title)
+        self.h_dlg = dlg_proc(0, DLG_CREATE)
+        
+        n = dlg_proc(self.h_dlg, DLG_CTL_ADD, prop='treeview')
+        dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, index=n, prop={
+            'name':'tree', 
+            'a_r':('',']'), #anchor to entire form: l,r,t,b
+            'a_b':('',']'),
+            'on_menu': 'cuda_project_man.tree_on_menu',  
+            'on_unfold': 'cuda_project_man.tree_on_unfold',  
+            'on_click_dbl': 'cuda_project_man.tree_on_click_dbl',  
+            } )
+
+        self.tree = dlg_proc(self.h_dlg, DLG_CTL_HANDLE, index=n)
+        tree_proc(self.tree, TREE_THEME)
+        tree_proc(self.tree, TREE_PROP_SHOW_ROOT, text='0')
         tree_proc(self.tree, TREE_ITEM_DELETE, 0)
+        
+        app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, self.h_dlg, 'project.png'))
+        
         base = Path(__file__).parent
         for n in NODES:
             path = base / 'icons' / icon_names[n]
@@ -150,17 +166,14 @@ class Command:
         return menu_proc(parent, MENU_ADD, command=action, caption=name)
 
 
-
-
-
-
     def generate_context_menu(self):
         if self.selected is not None:
             node_type = self.get_info(self.selected).image
         else:
             node_type = None
 
-        menu_all = "side:" + self.title
+        self.h_menu = menu_proc(0, MENU_CREATE)
+        menu_all = self.h_menu
         menu_proc(menu_all, MENU_CLEAR)
         menu_proj = self.add_context_menu_node(menu_all, "0", "Project file")
         menu_nodes = self.add_context_menu_node(menu_all, "0", "Root nodes")
@@ -475,27 +488,11 @@ class Command:
             index = tree_proc(self.tree, TREE_ITEM_GET_PARENT, index)
 
         path.reverse()
-        full_path = Path(self.top_nodes.get(index, '') / str.join(os.sep, path))
+        node = self.top_nodes.get(index, None)
+        full_path = Path(node / str.join(os.sep, path)) if node else Path('')
 
         return full_path
 
-    def on_panel(self, ed_self, id_control, id_event):
-        if not self.tree or id_control != self.tree:
-            return
-
-        if id_event == "on_sel":
-            self.generate_context_menu()
-            info = self.get_info(self.selected)
-            path = self.get_location_by_index(self.selected)
-            if info.image == NODE_DIR:
-                if self.options.get("lazy", False):
-                    self.action_refresh(self.selected, path.iterdir())
-                    tree_proc(self.tree, TREE_ITEM_UNFOLD, self.selected)
-        elif id_event == "on_dbl_click":
-            info = self.get_info(self.selected)
-            path = self.get_location_by_index(self.selected)
-            if info.image == NODE_FILE:
-                file_open(str(path))
 
     def save_options(self):
         with self.options_filename.open(mode="w", encoding='utf8') as fout:
@@ -681,3 +678,26 @@ class Command:
         if fn:
             if self.jump_to_filename(fn): #gets False if found
                 msg_status('Cannot jump to file: '+fn)
+
+
+    def tree_on_unfold(self, id_dlg, id_ctl, data='', info=''):
+        print('on_unfold todo')
+        
+        #info = self.get_info(self.selected)
+        #path = self.get_location_by_index(self.selected)
+        #if info.image == NODE_DIR:
+        #    if self.options.get("lazy", False):
+        #        self.action_refresh(self.selected, path.iterdir())
+        #        tree_proc(self.tree, TREE_ITEM_UNFOLD, self.selected)
+        #
+        
+    def tree_on_menu(self, id_dlg, id_ctl, data='', info=''):
+        self.generate_context_menu()
+        menu_proc(self.h_menu, MENU_SHOW, command='')
+
+    def tree_on_click_dbl(self, id_dlg, id_ctl, data='', info=''):
+        info = self.get_info(self.selected)
+        path = self.get_location_by_index(self.selected)
+        if info.image == NODE_FILE:
+            file_open(str(path))
+                
