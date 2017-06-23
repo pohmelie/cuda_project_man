@@ -46,7 +46,7 @@ NodeInfo = collections.namedtuple("NodeInfo", "caption index image level")
 
 def is_filename_mask_listed(name, mask_list):
     #s = os.path.basename(name)
-    s = name #enough for s.endswith
+    s = name.lower() #enough for s.endswith
     for item in mask_list.split(' '):
         #if fnmatch(s, item): #slow, lets do it faster
         if s.endswith(item):
@@ -137,7 +137,7 @@ class Command:
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Open project', index2=icon_open, command='cuda_project_man.action_open_project' )
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Save project as', index2=icon_save, command='cuda_project_man.action_save_project_as' )
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text='-' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Add folder', index2=icon_add_dir, command='cuda_project_man.action_add_directory' )
+        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Add folder', index2=icon_add_dir, command='cuda_project_man.action_add_folder' )
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Add file', index2=icon_add_file, command='cuda_project_man.action_add_file' )
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Remove node', index2=icon_del, command='cuda_project_man.action_remove_node' )
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text='-' )
@@ -467,7 +467,7 @@ class Command:
             else:
                 msg_status("Recent item not found")
 
-    def action_add_directory(self):
+    def action_add_folder(self):
         self.add_node(lambda: dlg_dir(""))
 
     def action_add_file(self):
@@ -587,11 +587,16 @@ class Command:
     def new_project_open_dir(self):
         self.init_panel()
         self.action_new_project()
-        self.action_add_directory()
+        self.action_add_folder()
         self.do_unfold_first()
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
     def open_dir(self, dirname):
+        if not os.path.isdir(dirname):
+            return
+        #expand "." to fully qualified name
+        dirname = os.path.abspath(dirname)
+
         self.init_panel()
         self.action_new_project()
         self.add_node(lambda: dirname)
@@ -639,7 +644,7 @@ class Command:
 
     def contextmenu_add_dir(self):
         self.init_panel()
-        self.action_add_directory()
+        self.action_add_folder()
 
     def contextmenu_add_file(self):
         self.init_panel()
