@@ -1,7 +1,7 @@
 import os
+import re
 import collections
 import json
-#from fnmatch import fnmatch
 from .pathlib import Path, PurePosixPath
 from .projman_dlg import *
 
@@ -11,14 +11,9 @@ import cudatext_cmd
 PROJECT_EXTENSION = ".cuda-proj"
 PROJECT_DIALOG_FILTER = "CudaText projects|*"+PROJECT_EXTENSION
 PROJECT_UNSAVED_NAME = "(Unsaved project)"
-NEED_API = '1.0.184'
+NEED_API = '1.0.189'
 
 global_project_info = {}
-
-icon_dir = os.path.join(app_path(APP_DIR_DATA), 'filetypeicons', 'vscode_16x16')
-icon_json = os.path.join(icon_dir, 'icons.json')
-icon_json_dict = json.loads(open(icon_json).read())
-icon_indexes = {}
 
 NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD = range(4)
 
@@ -88,6 +83,7 @@ class Command:
         ("-"                    , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD]),
         ("Refresh"              , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD]),
     )
+
     options = {
         "recent_projects": [],
         "masks_ignore": MASKS_IGNORE,
@@ -114,6 +110,11 @@ class Command:
         show_toolbar = self.options.get("toolbar", True)
 
         self.h_dlg = dlg_proc(0, DLG_CREATE)
+        
+        dlg_proc(self.h_dlg, DLG_PROP_SET, {
+            'keypreview': True,
+            'on_key_down': self.form_key_down,
+            } )
 
         n = dlg_proc(self.h_dlg, DLG_CTL_ADD, prop='toolbar')
         dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, index=n, prop={
@@ -123,17 +124,17 @@ class Command:
             } )
 
         self.h_bar = dlg_proc(self.h_dlg, DLG_CTL_HANDLE, index=n)
+        self.toolbar_imglist = toolbar_proc(self.h_bar, TOOLBAR_GET_IMAGELIST)
 
         dirname = os.path.join(os.path.dirname(__file__), 'icons')
-        icon_open = toolbar_proc(self.h_bar, TOOLBAR_ADD_ICON, text = os.path.join(dirname, 'tb-open.png'))
-        icon_save = toolbar_proc(self.h_bar, TOOLBAR_ADD_ICON, text = os.path.join(dirname, 'tb-save.png'))
-        icon_add_file = toolbar_proc(self.h_bar, TOOLBAR_ADD_ICON, text = os.path.join(dirname, 'tb-add-file.png'))
-        icon_add_dir = toolbar_proc(self.h_bar, TOOLBAR_ADD_ICON, text = os.path.join(dirname, 'tb-add-dir.png'))
-        icon_del = toolbar_proc(self.h_bar, TOOLBAR_ADD_ICON, text = os.path.join(dirname, 'tb-del.png'))
-        icon_cfg = toolbar_proc(self.h_bar, TOOLBAR_ADD_ICON, text = os.path.join(dirname, 'tb-cfg.png'))
+        icon_open = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'tb-open.png'))
+        icon_save = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'tb-save.png'))
+        icon_add_file = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'tb-add-file.png'))
+        icon_add_dir = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'tb-add-dir.png'))
+        icon_del = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'tb-del.png'))
+        icon_cfg = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'tb-cfg.png'))
 
         toolbar_proc(self.h_bar, TOOLBAR_THEME)
-        toolbar_proc(self.h_bar, TOOLBAR_SET_ICON_SIZES, index=16, index2=16)
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Open project', index2=icon_open, command='cuda_project_man.action_open_project' )
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Save project as', index2=icon_save, command='cuda_project_man.action_save_project_as' )
         toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text='-' )
@@ -155,10 +156,12 @@ class Command:
             } )
 
         self.tree = dlg_proc(self.h_dlg, DLG_CTL_HANDLE, index=n)
+        self.tree_imglist = tree_proc(self.tree, TREE_GET_IMAGELIST)
         tree_proc(self.tree, TREE_THEME)
         tree_proc(self.tree, TREE_PROP_SHOW_ROOT, text='0')
         tree_proc(self.tree, TREE_ITEM_DELETE, 0)
 
+        self.icon_init()
         self.ICON_ALL = self.icon_get('_')
         self.ICON_DIR = self.icon_get('_dir')
         self.ICON_PROJ = self.icon_get('_proj')
@@ -707,6 +710,10 @@ class Command:
         if not self.tree:
             msg_status('Project not opened')
             return
+            
+        #workaround: unfold all tree, coz tree loading is lazy
+        #todo: dont unfold all, but allow enum_all() to work
+        tree_proc(self.tree, TREE_ITEM_UNFOLD_DEEP, 0)
 
         files = []
         def callback_collect(fn, item):
@@ -732,6 +739,9 @@ class Command:
         def callback_find(fn, item):
             if fn==filename_to_find:
                 tree_proc(self.tree, TREE_ITEM_SELECT, item)
+                tree_proc(self.tree, TREE_ITEM_SHOW, item)
+                self.focus_panel()
+                #dlg_proc(self.h_dlg, DLG_FOCUS)
                 return False
             return True
 
@@ -772,25 +782,48 @@ class Command:
             file_open(str(path))
 
 
-    def icon_get(self, key):
-        global icon_indexes
-        global icon_dir
-        global icon_json_dict
+    def icon_init(self):
 
-        s = icon_indexes.get(key, None)
+        self.icon_theme = self.options.get('icon_theme', 'vscode_16x16')
+
+        try:
+            nsize = int(re.match('^\w+x(\d+)$', self.icon_theme).group(1))
+            imagelist_proc(self.tree_imglist, IMAGELIST_SET_SIZE, (nsize, nsize))
+        except:
+            print('Incorrect theme name, must be nnnnnn_NNxNN:', self.icon_theme)
+
+        self.icon_dir = os.path.join(app_path(APP_DIR_DATA), 'filetypeicons', self.icon_theme)
+        if not os.path.isdir(self.icon_dir):
+            self.icon_dir = os.path.join(app_path(APP_DIR_DATA), 'filetypeicons', 'vscode_16x16')
+        
+        self.icon_json = os.path.join(self.icon_dir, 'icons.json')
+        self.icon_json_dict = json.loads(open(self.icon_json).read())
+        self.icon_indexes = {}
+
+
+    def icon_get(self, key):
+
+        s = self.icon_indexes.get(key, None)
         if s:
             return s
 
-        fn = icon_json_dict.get(key, None)
+        fn = self.icon_json_dict.get(key, None)
         if fn is None:
             n = self.ICON_ALL
-            icon_indexes[key] = n
+            self.icon_indexes[key] = n
             return n
 
-        fn = os.path.join(icon_dir, fn)
-        n = tree_proc(self.tree, TREE_ICON_ADD, text=fn)
-        if n == -1:
+        fn = os.path.join(self.icon_dir, fn)
+        n = imagelist_proc(self.tree_imglist, IMAGELIST_ADD, value=fn)
+        if n is None:
             print('Incorrect filetype icon:', fn)
             n = self.ICON_ALL
-        icon_indexes[key] = n
+        self.icon_indexes[key] = n
         return n
+
+    def form_key_down(self, id_dlg, id_ctl, data):
+        
+        if id_ctl==13: #Enter
+            self.tree_on_click_dbl(id_dlg, id_ctl)
+            return False #block key
+            
