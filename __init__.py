@@ -157,7 +157,6 @@ class Command:
 
         self.tree = dlg_proc(self.h_dlg, DLG_CTL_HANDLE, index=n)
         self.tree_imglist = tree_proc(self.tree, TREE_GET_IMAGELIST)
-        tree_proc(self.tree, TREE_THEME)
         tree_proc(self.tree, TREE_PROP_SHOW_ROOT, text='0')
         tree_proc(self.tree, TREE_ITEM_DELETE, 0)
 
@@ -181,6 +180,10 @@ class Command:
             return
 
         self.init_form_main()
+
+        dlg_proc(self.h_dlg, DLG_SCALE)
+        tree_proc(self.tree, TREE_THEME) #TREE_THEME only after DLG_SCALE
+
         app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, self.h_dlg, 'project.png'))
 
         if and_activate:
@@ -270,6 +273,8 @@ class Command:
     def add_node(self, dialog):
         path = dialog()
         if path is not None:
+            if path in self.project["nodes"]:
+                return
             msg_status("Adding to project: " + path, True)
             self.project["nodes"].append(path)
             self.project["nodes"].sort(key=Command.node_ordering)
@@ -593,16 +598,19 @@ class Command:
         self.do_unfold_first()
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
-    def open_dir(self, dirname):
+    def open_dir(self, dirname, new_proj=False):
         if not os.path.isdir(dirname):
             return
         #expand "." to fully qualified name
         dirname = os.path.abspath(dirname)
 
         self.init_panel()
-        self.action_new_project()
+        if new_proj:
+            self.action_new_project()
         self.add_node(lambda: dirname)
-        self.do_unfold_first()
+        if new_proj:
+            self.do_unfold_first()
+
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
     def on_open_pre(self, ed_self, filename):
@@ -851,3 +859,26 @@ class Command:
             fn = e.get_filename()
             if fn:
                 self.add_node(lambda: fn)
+
+
+    def goto_main(self):
+        if not self.tree:
+            msg_status('Project not opened')
+            return
+
+        #workaround: unfold all tree, coz tree loading is lazy
+        #todo: dont unfold all, but allow enum_all() to work
+        tree_proc(self.tree, TREE_ITEM_UNFOLD_DEEP, 0)
+
+        fn = self.project.get('mainfile', '')
+        if not fn:
+            msg_status('Project main file is not set')
+            return
+        self.jump_to_filename(fn)
+
+    def open_main(self):
+        fn = self.project.get('mainfile', '')
+        if fn:
+            file_open(fn)
+        else:
+            msg_status('Project main file is not set')
