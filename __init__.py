@@ -11,11 +11,8 @@ import cudatext_cmd
 PROJECT_EXTENSION = ".cuda-proj"
 PROJECT_DIALOG_FILTER = "CudaText projects|*"+PROJECT_EXTENSION
 PROJECT_UNSAVED_NAME = "(Unsaved project)"
-NEED_API = '1.0.189'
-
-global_project_info = {}
-
 NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD = range(4)
+global_project_info = {}
 
 def project_variables():
     """
@@ -152,7 +149,8 @@ class Command:
             'a_b':('',']'),
             'on_menu': 'cuda_project_man.tree_on_menu',
             'on_unfold': 'cuda_project_man.tree_on_unfold',
-            'on_click_dbl': 'cuda_project_man.tree_on_click_dbl',
+            'on_click': 'cuda_project_man.tree_on_click',
+            #'on_click_dbl': 'cuda_project_man.tree_on_click_dbl',
             } )
 
         self.tree = dlg_proc(self.h_dlg, DLG_CTL_HANDLE, index=n)
@@ -175,10 +173,6 @@ class Command:
         if self.tree:
             return
 
-        if app_api_version() < NEED_API:
-            msg_box('Project Manager needs newer app version', MB_OK + MB_ICONERROR)
-            return
-
         self.init_form_main()
 
         dlg_proc(self.h_dlg, DLG_SCALE)
@@ -191,6 +185,7 @@ class Command:
 
         self.action_refresh()
         self.generate_context_menu()
+
 
     def show_panel(self):
         self.do_show(False)
@@ -410,6 +405,11 @@ class Command:
                 project_name,
                 self.ICON_PROJ,
             )
+
+            #select 1st node
+            items_root = tree_proc(self.tree, TREE_ITEM_ENUM, 0)
+            tree_proc(self.tree, TREE_ITEM_SELECT, items_root[0][0])
+
             nodes = self.project["nodes"]
             self.top_nodes = {}
 
@@ -548,6 +548,8 @@ class Command:
         global_project_info['mainfile'] = self.project.get('mainfile', '')
 
     def get_info(self, index):
+        if index is None:
+            return
         info = tree_proc(self.tree, TREE_ITEM_GET_PROPS, index)
         if info:
             return NodeInfo(info['text'], info['icon'])
@@ -625,9 +627,10 @@ class Command:
         if dialog_config(self.options):
             self.save_options()
 
-            dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, name='bar', prop={
-                'vis': self.options.get('toolbar', True)
-                })
+            if self.h_dlg:
+                dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, name='bar', prop={
+                    'vis': self.options.get('toolbar', True)
+                    })
 
     def config_proj(self):
         if not self.tree:
@@ -790,11 +793,22 @@ class Command:
         self.generate_context_menu()
         menu_proc(self.h_menu, MENU_SHOW, command='')
 
-    def tree_on_click_dbl(self, id_dlg, id_ctl, data='', info=''):
+
+    def do_open_current_file(self, options):
         info = self.get_info(self.selected)
+        if not info:
+            return
         path = self.get_location_by_index(self.selected)
+        if not path:
+            return
         if info.image not in [self.ICON_BAD, self.ICON_DIR, self.ICON_PROJ]:
-            file_open(str(path))
+            file_open(str(path), options=options)
+
+    def tree_on_click(self, id_dlg, id_ctl, data='', info=''):
+        self.do_open_current_file('/preview')
+
+    #def tree_on_click_dbl(self, id_dlg, id_ctl, data='', info=''):
+    #    self.do_open_current_file('')
 
 
     def icon_init(self):
