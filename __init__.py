@@ -417,7 +417,12 @@ class Command:
             if self.is_filename_ignored(path.name):
                 continue
 
-            if path.is_dir() and is_locked(str(path)):
+            if path.is_dir():
+                isbad = is_locked(str(path))
+            else:
+                isbad = not path.is_file()
+
+            if isbad:
                 imageindex = self.ICON_BAD
             elif path.is_dir():
                 imageindex = self.ICON_DIR
@@ -462,6 +467,7 @@ class Command:
             path = dlg_file(True, "", "", PROJECT_DIALOG_FILTER)
         if path:
             if Path(path).exists():
+                print('Loading project: '+path)
                 with open(path, encoding='utf8') as fin:
                     self.project = json.load(fin)
                     self.project_file_path = Path(path)
@@ -524,6 +530,7 @@ class Command:
                 json.dump(self.project, fout, indent=4)
 
             self.update_global_data()
+            print('Saving project: '+str(path))
             msg_status("Project saved")
 
             if need_refresh:
