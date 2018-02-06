@@ -26,7 +26,12 @@ def project_variables():
     res = collections.OrderedDict()
     data = global_project_info
     res['ProjDir'] = os.path.dirname(data.get('filename', ''))
-    res['ProjMainFile'] = data.get('mainfile', '')
+
+    fn = data.get('mainfile', '')
+    res['ProjMainFile'] = fn
+    res['ProjMainFileNameOnly'] = os.path.basename(fn)
+    res['ProjMainFileNameNoExt'] = '.'.join(os.path.basename(fn).split('.')[0:-1])
+
     data = global_project_info.get('vars', [])
     for item in data:
         s1, s2 = item.split('=', maxsplit=1)
@@ -47,6 +52,19 @@ def is_filename_mask_listed(name, mask_list):
 
 def is_locked(s):
     return not os.access(s, os.R_OK)
+
+
+def _toolbar_add_btn(h_bar, hint, icon=-1, command=''):
+    toolbar_proc(h_bar, TOOLBAR_ADD_ITEM)
+    cnt = toolbar_proc(h_bar, TOOLBAR_GET_COUNT)
+    h_btn = toolbar_proc(h_bar, TOOLBAR_GET_BUTTON_HANDLE, index=cnt-1)
+    if hint=='-':
+        button_proc(h_btn, BTN_SET_KIND, BTNKIND_SEP_HORZ)
+    else:
+        button_proc(h_btn, BTN_SET_KIND, BTNKIND_ICON_ONLY)
+        button_proc(h_btn, BTN_SET_HINT, hint)
+        button_proc(h_btn, BTN_SET_IMAGEINDEX, icon)
+        button_proc(h_btn, BTN_SET_DATA1, command)
 
 
 class Command:
@@ -132,14 +150,14 @@ class Command:
         icon_cfg = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'tb-cfg.png'))
 
         toolbar_proc(self.h_bar, TOOLBAR_THEME)
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Open project', index2=icon_open, command='cuda_project_man.action_open_project' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Save project as', index2=icon_save, command='cuda_project_man.action_save_project_as' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text='-' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Add folder', index2=icon_add_dir, command='cuda_project_man.action_add_folder' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Add file', index2=icon_add_file, command='cuda_project_man.action_add_file' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Remove node', index2=icon_del, command='cuda_project_man.action_remove_node' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text='-' )
-        toolbar_proc(self.h_bar, TOOLBAR_ADD_BUTTON, text2='Config', index2=icon_cfg, command='cuda_project_man.action_config' )
+        _toolbar_add_btn(self.h_bar, hint='Open project', icon=icon_open, command='cuda_project_man.action_open_project' )
+        _toolbar_add_btn(self.h_bar, hint='Save project as', icon=icon_save, command='cuda_project_man.action_save_project_as' )
+        _toolbar_add_btn(self.h_bar, hint='-' )
+        _toolbar_add_btn(self.h_bar, hint='Add folder', icon=icon_add_dir, command='cuda_project_man.action_add_folder' )
+        _toolbar_add_btn(self.h_bar, hint='Add file', icon=icon_add_file, command='cuda_project_man.action_add_file' )
+        _toolbar_add_btn(self.h_bar, hint='Remove node', icon=icon_del, command='cuda_project_man.action_remove_node' )
+        _toolbar_add_btn(self.h_bar, hint='-' )
+        _toolbar_add_btn(self.h_bar, hint='Config', icon=icon_cfg, command='cuda_project_man.action_config' )
 
         n = dlg_proc(self.h_dlg, DLG_CTL_ADD, prop='treeview')
         dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, index=n, prop={
