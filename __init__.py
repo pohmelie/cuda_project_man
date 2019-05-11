@@ -104,6 +104,8 @@ class Command:
         "masks_ignore": MASKS_IGNORE,
         "on_start": False,
         "toolbar": True,
+        "preview": True,
+        "d_click": False,
     }
 
     tree = None
@@ -137,10 +139,13 @@ class Command:
             'name':'bar',
             'a_r':('',']'), #anchor to top: l,r,t
             'vis': show_toolbar,
+            'h': 24,
+            'autosize': True,
             } )
 
         self.h_bar = dlg_proc(self.h_dlg, DLG_CTL_HANDLE, index=n)
         self.toolbar_imglist = toolbar_proc(self.h_bar, TOOLBAR_GET_IMAGELIST)
+        self.set_imagelist_size(toolbar_theme, self.toolbar_imglist)
 
         dirname = os.path.join(app_path(APP_DIR_DATA), 'projtoolbaricons', toolbar_theme)
         icon_open = imagelist_proc(self.toolbar_imglist, IMAGELIST_ADD, value = os.path.join(dirname, 'open.png'))
@@ -159,6 +164,7 @@ class Command:
         _toolbar_add_btn(self.h_bar, hint='Remove node', icon=icon_del, command='cuda_project_man.action_remove_node' )
         _toolbar_add_btn(self.h_bar, hint='-' )
         _toolbar_add_btn(self.h_bar, hint='Config', icon=icon_cfg, command='cuda_project_man.action_config' )
+        toolbar_proc(self.h_bar, TOOLBAR_UPDATE)
 
         n = dlg_proc(self.h_dlg, DLG_CTL_ADD, prop='treeview')
         dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, index=n, prop={
@@ -169,6 +175,7 @@ class Command:
             'on_menu': 'cuda_project_man.tree_on_menu',
             'on_unfold': 'cuda_project_man.tree_on_unfold',
             'on_click': 'cuda_project_man.tree_on_click',
+            'on_click_dbl': 'cuda_project_man.tree_on_click_dbl',
             #'on_click_dbl': 'cuda_project_man.tree_on_click_dbl',
             } )
 
@@ -194,7 +201,7 @@ class Command:
 
         self.init_form_main()
 
-        dlg_proc(self.h_dlg, DLG_SCALE)
+        #dlg_proc(self.h_dlg, DLG_SCALE)
         tree_proc(self.tree, TREE_THEME) #TREE_THEME only after DLG_SCALE
 
         app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, self.h_dlg, 'project.png'))
@@ -651,6 +658,7 @@ class Command:
 
     def config(self):
         if dialog_config(self.options):
+            print('ProjectMan: saving options')
             self.save_options()
 
             if self.h_dlg:
@@ -830,22 +838,39 @@ class Command:
         if info.image not in [self.ICON_BAD, self.ICON_DIR, self.ICON_PROJ]:
             file_open(str(path), options=options)
 
+
+    def get_open_options(self):
+
+        s = '/preview' if self.options.get('preview', True) else ''
+        s += ' /nozip /nontext-view-text'
+        return s
+
     def tree_on_click(self, id_dlg, id_ctl, data='', info=''):
-        self.do_open_current_file('/preview')
 
-    #def tree_on_click_dbl(self, id_dlg, id_ctl, data='', info=''):
-    #    self.do_open_current_file('')
+        if self.options.get('d_click', False):
+            return
+        self.do_open_current_file(self.get_open_options())
 
+    def tree_on_click_dbl(self, id_dlg, id_ctl, data='', info=''):
+
+        if not self.options.get('d_click', False):
+            return
+        self.do_open_current_file(self.get_open_options())
+
+
+    def set_imagelist_size(self, theme_name, imglist):
+
+        try:
+            nsize = int(re.match('^\w+x(\d+)$', theme_name).group(1))
+            imagelist_proc(imglist, IMAGELIST_SET_SIZE, (nsize, nsize))
+            print('ProjectMan icons "%s" size: %d'%(theme_name, nsize))
+        except:
+            print('Incorrect theme name, must be nnnnnn_NNxNN:', self.icon_theme)
 
     def icon_init(self):
 
         self.icon_theme = self.options.get('icon_theme', 'vscode_16x16')
-
-        try:
-            nsize = int(re.match('^\w+x(\d+)$', self.icon_theme).group(1))
-            imagelist_proc(self.tree_imglist, IMAGELIST_SET_SIZE, (nsize, nsize))
-        except:
-            print('Incorrect theme name, must be nnnnnn_NNxNN:', self.icon_theme)
+        self.set_imagelist_size(self.icon_theme, self.tree_imglist)
 
         self.icon_dir = os.path.join(app_path(APP_DIR_DATA), 'filetypeicons', self.icon_theme)
         if not os.path.isdir(self.icon_dir):
