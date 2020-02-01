@@ -41,6 +41,15 @@ def project_variables():
 
 NodeInfo = collections.namedtuple("NodeInfo", "caption image")
 
+_homedir = os.path.expanduser('~')
+
+def nice_filename(path):
+
+    dir = os.path.dirname(path)
+    if dir == _homedir or dir.startswith(_homedir+'/'):
+        dir = dir.replace(_homedir, '~')
+    return os.path.basename(path) + ' ('+ dir + ')'
+
 
 def is_filename_mask_listed(name, mask_list):
     #s = os.path.basename(name)
@@ -285,12 +294,12 @@ class Command:
             if item_caption == "Recent projects":
                 for path in self.options["recent_projects"]:
                     action = str.format("module=cuda_project_man;cmd=action_open_project;info=r'{}';", path)
-                    self.add_context_menu_node(menu_added, action, path)
+                    self.add_context_menu_node(menu_added, action, nice_filename(path))
 
     @staticmethod
     def node_ordering(node):
         path = Path(node)
-        return path.is_file(), path.name
+        return path.is_file(), path.name.upper()
 
     def add_node(self, dialog):
         path = dialog()
@@ -521,8 +530,8 @@ class Command:
         if index in self.top_nodes:
             tree_proc(self.tree, TREE_ITEM_DELETE, index)
             path = self.top_nodes.pop(index)
-            i = self.project["nodes"].index(str(path))
-            self.project["nodes"].pop(i)
+            if str(path) in self.project["nodes"]:
+                self.project["nodes"].remove(str(path))
             if self.project_file_path:
                 self.action_save_project_as(self.project_file_path)
 
@@ -808,6 +817,13 @@ class Command:
     def tree_on_unfold(self, id_dlg, id_ctl, data='', info=''):
         info = self.get_info(data)
         path = self.get_location_by_index(data)
+
+        if not path.is_dir():
+            tree_proc(self.tree, TREE_ITEM_DELETE, data)
+            if str(path) in self.project["nodes"]:
+                self.project["nodes"].remove(str(path))
+            return
+
         if info.image != self.ICON_DIR:
             return
         items = tree_proc(self.tree, TREE_ITEM_ENUM, data)
@@ -854,11 +870,14 @@ class Command:
 
     def set_imagelist_size(self, theme_name, imglist):
 
-        try:
-            nsize = int(re.match('^\w+x(\d+)$', theme_name).group(1))
-            imagelist_proc(imglist, IMAGELIST_SET_SIZE, (nsize, nsize))
-        except:
-            print('ProjectManager: incorrect theme name:', self.icon_theme)
+        res = re.match('^\S+x(\d+)$', theme_name)
+        if not res:
+            return msg_box('Project Manager: bad icons folder name: "%s"'%theme_name, MB_OK+MB_ICONERROR)
+        n = int(res.group(1))
+        if not 8<=n<=64:
+            return msg_box('Project Manager: bad icons size: "%s"'%theme_name, MB_OK+MB_ICONERROR)
+
+        imagelist_proc(imglist, IMAGELIST_SET_SIZE, (n, n))
 
     def icon_init(self):
 
@@ -897,7 +916,7 @@ class Command:
     def form_key_down(self, id_dlg, id_ctl, data):
 
         if id_ctl==13: #Enter
-            self.tree_on_click_dbl(id_dlg, id_ctl)
+            self.do_open_current_file(self.get_open_options())
             return False #block key
 
     def add_current_file(self):
