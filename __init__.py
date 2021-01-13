@@ -71,16 +71,31 @@ def is_mask_listed(s, masks):
             return True
     return False
 
+# only Py 3.5 supports os.stat(s).st_file_attributes
+# so this is to support Py 3.4
+def is_hidden_win32(s):
+    import ctypes # import here to avoid it on Unix
+    try:
+        attrs = ctypes.windll.kernel32.GetFileAttributesW(s)
+        assert attrs != -1
+        res = bool(attrs & 2)
+    except (AttributeError, AssertionError):
+        res = False
+    return res
+
 def is_hidden(s):
     if IS_WIN:
         if s=='':
             return False
         if s.endswith(':\\'):
             return False
-        try:
-            return bool(os.stat(s).st_file_attributes & stat.FILE_ATTRIBUTE_HIDDEN)
-        except:
-            return True
+
+        return is_hidden_win32(s)
+        #try:
+        #    return bool(os.stat(s).st_file_attributes & stat.FILE_ATTRIBUTE_HIDDEN)
+        #except:
+        #    return True
+
     else:
         return os.path.basename(s).startswith('.')
 
@@ -91,8 +106,7 @@ def is_locked(s):
     if IS_WIN:
         if s.endswith(':\\'):
             return False
-        mask = stat.FILE_ATTRIBUTE_HIDDEN | stat.FILE_ATTRIBUTE_SYSTEM
-        return bool(os.stat(s).st_file_attributes & mask)
+        return is_hidden_win32(s)
     else:
         return not os.access(s, os.R_OK)
 
