@@ -1,6 +1,6 @@
 [info]
 title=Project Manager
-desc=Allows to manage "projects" (groups of files/dirs), shows Project panel in the side-panel
+desc=Allows to manage "projects" using the Project side panel
 type=cudatext-plugin
 subdir=cuda_project_man
 homepage=https://github.com/pohmelie/cuda_project_man
@@ -10,16 +10,17 @@ hint=Project
 icon=project.png
 method=show_panel
 
-[item1]
-section=events
-events=on_open,on_open_pre,on_start
-
 [item2]
+section=events
+events=on_open_pre
+keys=cuda-proj
+
+[item4]
 section=commands
 caption=&Project Manager\&Show Project panel
 method=show_panel
 
-;[item3]
+;[item5]
 ;section=commands
 ;caption=&Project Manager\&Focus Project panel
 ;method=focus_panel
