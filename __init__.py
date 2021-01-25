@@ -20,6 +20,11 @@ PROJECT_UNSAVED_NAME = _("(Unsaved project)")
 NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD = range(4)
 global_project_info = {}
 
+def _file_open(fn, options=''):
+    gr = ed.get_prop(PROP_INDEX_GROUP)
+    #print('Opening file in group %d'%gr)
+    file_open(fn, group=gr, options=options)
+
 def project_variables():
     """
     gives dict with "project variables", which is ok for using from other plugins,
@@ -346,12 +351,12 @@ class Command:
 
     @staticmethod
     def node_ordering(node):
+        # sort folders first, then by extension
         path = Path(node)
-        return path.is_file(), path.name.upper()
+        return path.is_file(), path.suffix.upper(), path.name.upper()
 
-    def add_node(self, dialog):
-        path = dialog()
-        if path is not None:
+    def add_node(self, path):
+        if path:
             if path in self.project["nodes"]:
                 return
             msg_status(_("Adding to project: ") + path, True)
@@ -395,7 +400,7 @@ class Command:
         #open new file
         self.jump_to_filename(str(path))
         if os.path.isfile(str(path)):
-            file_open(str(path))
+            _file_open(str(path))
 
     def action_rename(self):
         location = Path(self.get_location_by_index(self.selected))
@@ -410,7 +415,7 @@ class Command:
         location.replace(new_location)
         if location in self.top_nodes.values():
             self.action_remove_node()
-            self.add_node(lambda: str(new_location))
+            self.add_node(str(new_location))
 
         self.action_refresh()
         self.jump_to_filename(str(new_location))
@@ -551,7 +556,8 @@ class Command:
                 parent,
                 -1,
                 sname,
-                imageindex
+                imageindex,
+                data=spath
                 )
             if nodes is self.project["nodes"]:
                 self.top_nodes[index] = path
@@ -600,10 +606,12 @@ class Command:
                 msg_status(_("Recent item not found: ") + path)
 
     def action_add_folder(self):
-        self.add_node(lambda: dlg_dir(""))
+        fn = dlg_dir("")
+        self.add_node(fn)
 
     def action_add_file(self):
-        self.add_node(lambda: dlg_file(True, "", "", ""))
+        fn = dlg_file(True, "", "", "")
+        self.add_node(fn)
 
     def action_remove_node(self):
         index = self.selected
@@ -681,6 +689,7 @@ class Command:
             return NodeInfo(info['text'], info['icon'])
 
     def get_location_by_index(self, index):
+        '''
         path = []
         while index and index not in self.top_nodes:
             path.append(self.get_info(index).caption)
@@ -691,7 +700,9 @@ class Command:
         full_path = Path(node / str.join(os.sep, path)) if node else Path('')
 
         return full_path
-
+        '''
+        p = tree_proc(self.tree, TREE_ITEM_GET_PROPS, index)
+        return Path(p.get('data', ''))
 
     def save_options(self):
         with self.options_filename.open(mode="w", encoding='utf8') as fout:
@@ -732,7 +743,7 @@ class Command:
 
         self.init_panel()
         self.action_new_project()
-        self.add_node(lambda: fn)
+        self.add_node(fn)
         self.do_unfold_first()
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
@@ -752,7 +763,7 @@ class Command:
         self.init_panel()
         if new_proj:
             self.action_new_project()
-        self.add_node(lambda: dirname)
+        self.add_node(dirname)
         if new_proj:
             self.do_unfold_first()
 
@@ -865,15 +876,62 @@ class Command:
         Callback for all subitems of given item.
         Until callback gets false.
         """
-        items = tree_proc(self.tree, TREE_ITEM_ENUM, item)
+        items = tree_proc(self.tree, TREE_ITEM_ENUM_EX, item)
         if items:
             for i in items:
-                subitem = i[0]
-                fn = str(self.get_location_by_index(subitem))
+                subitem = i['id']
+                fn = i.get('data', '')
                 if not callback(fn, subitem):
                     return False
                 if not self.enum_subitems(subitem, callback):
                     return False
+        return True
+
+    def enum_all_fn(self, filename, and_open):
+        """
+        Callback for all items.
+        Find 'filename', and focus its node.
+        """
+        items = tree_proc(self.tree, TREE_ITEM_ENUM, 0)
+        if items:
+            return self.enum_subitems_fn(items[0][0], filename, and_open)
+
+    def enum_subitems_fn(self, item, filename, and_open):
+        """
+        Callback for all subitems of given item.
+        When found 'filename', focus it and return False
+        """
+        items = tree_proc(self.tree, TREE_ITEM_ENUM_EX, item)
+        items_found = [i for i in items if i['data']==filename]
+
+        if items_found:
+            props = items_found[0]
+            node = props['id']
+            #print('GoToFile: found result:', props['data'])
+
+            tree_proc(self.tree, TREE_ITEM_SELECT, node)
+            tree_proc(self.tree, TREE_ITEM_SHOW, node)
+
+            # unfold only required tree nodes
+            if os.path.isdir(filename):
+                tree_proc(self.tree, TREE_ITEM_UNFOLD, node)
+
+            if and_open:
+                _file_open(fn)
+            return False
+
+        def _need(dirpath):
+            return filename.startswith(dirpath+os.sep)
+
+        items_dirs = [i for i in items if i['sub_items'] and _need(i['data'])]
+        if items_dirs:
+            node = items_dirs[0]['id']
+            dirpath = items_dirs[0]['data']
+            tree_proc(self.tree, TREE_ITEM_UNFOLD, node)
+            #print('Unfolding subdir:', dirpath)
+            if not self.enum_subitems_fn(node, filename, and_open):
+                return False
+
         return True
 
     def menu_goto(self):
@@ -887,9 +945,14 @@ class Command:
             msg_status(_('Project is empty'))
             return
 
+        files.sort()
         files_nice = [os.path.basename(fn)+'\t'+os.path.dirname(fn) for fn in files]
+
         # disable fuzzy search in menu
-        res = dlg_menu(MENU_LIST_ALT+MENU_NO_FUZZY, files_nice, caption=_('Go to file'))
+        res = dlg_menu(MENU_LIST_ALT+MENU_NO_FUZZY+MENU_NO_FULLFILTER,
+                       files_nice,
+                       caption=_('Go to file')
+                       )
         if res is None:
             return
 
@@ -898,24 +961,8 @@ class Command:
 
     def jump_to_filename(self, filename, and_open=False):
         """ Find filename in entire project and focus its tree node """
-        dir_need = os.path.dirname(filename)
-
-        def callback_find(fn, item):
-            if fn==filename:
-                tree_proc(self.tree, TREE_ITEM_SELECT, item)
-                tree_proc(self.tree, TREE_ITEM_SHOW, item)
-                if and_open:
-                    file_open(fn)
-                return False
-
-            # unfold only required tree nodes
-            if os.path.isdir(fn) and (fn+os.sep in dir_need+os.sep):
-                tree_proc(self.tree, TREE_ITEM_UNFOLD, item)
-
-            return True
-
         msg_status(_('Jumping to: ') + filename)
-        return self.enum_all(callback_find)
+        return self.enum_all_fn(filename, and_open)
 
     def sync_to_ed(self):
         """ Jump to active editor file, if it's in project """
@@ -969,7 +1016,7 @@ class Command:
             tree_proc(self.tree, TREE_ITEM_SET_ICON, self.selected, image_index=self.ICON_BAD)
             return
 
-        file_open(str(path), options=options)
+        _file_open(str(path), options=options)
 
 
     def get_open_options(self):
@@ -981,7 +1028,10 @@ class Command:
     def tree_on_click(self, id_dlg, id_ctl, data='', info=''):
 
         # set folder in project as current folder for Open/Save-as dialogs
-        s = str(self.get_location_by_index(self.selected))
+        node = self.selected
+        if not node: # may be from some OnClick events
+            return
+        s = str(self.get_location_by_index(node))
         if s and not s.startswith('.'): # skip parasitic '.' for project root node
             if os.path.isdir(s):
                 app_proc(PROC_SET_FOLDER, s)
@@ -1058,8 +1108,7 @@ class Command:
             self.init_panel(False)
 
         fn = ed.get_filename()
-        if fn:
-            self.add_node(lambda: fn)
+        self.add_node(fn)
 
     def add_opened_files(self):
 
@@ -1069,8 +1118,7 @@ class Command:
         for h in ed_handles():
             e = Editor(h)
             fn = e.get_filename()
-            if fn:
-                self.add_node(lambda: fn)
+            self.add_node(fn)
 
 
     def goto_main(self):
@@ -1087,7 +1135,7 @@ class Command:
     def open_main(self):
         fn = self.project.get('mainfile', '')
         if fn:
-            file_open(fn)
+            _file_open(fn)
         else:
             msg_status(_('Project main file is not set'))
 
@@ -1120,7 +1168,7 @@ class Command:
             return
 
         for (i, fn) in enumerate(files):
-            file_open(fn, options="/nontext-cancel")
+            _file_open(fn, options="/nontext-cancel")
             if i%10==0:
                 app_idle(False)
 
@@ -1140,7 +1188,7 @@ class Command:
             if os.path.isdir(fn) or os.path.isdir(fn2):
                 self.init_panel()
                 self.new_project()
-                self.add_node(lambda: dir)
+                self.add_node(dir)
                 self.jump_to_filename(filename)
                 return
 
