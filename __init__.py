@@ -53,12 +53,13 @@ NodeInfo = collections.namedtuple("NodeInfo", "caption image")
 
 _homedir = os.path.expanduser('~')
 
-def nice_filename(path):
+def collapse_filename(fn):
+    if (fn+'/').startswith(_homedir+'/'):
+        fn = fn.replace(_homedir, '~', 1)
+    return fn
 
-    dir = os.path.dirname(path)
-    if dir == _homedir or dir.startswith(_homedir+'/'):
-        dir = dir.replace(_homedir, '~')
-    return os.path.basename(path) + ' ('+ dir + ')'
+def nice_filename(path):
+    return os.path.basename(path) + ' ('+ collapse_filename(os.path.dirname(path)) + ')'
 
 
 def is_simple_listed(name, masks):
@@ -354,12 +355,18 @@ class Command:
         # sort folders first, then by extension
         path = Path(node)
         return path.is_file(), path.suffix.upper(), path.name.upper()
+    
+    @staticmethod
+    def node_ordering_direntry(path):
+        # node_ordering() for DirEntry
+        _, suffix = os.path.splitext(path.name)
+        return path.is_file(), suffix.upper(), path.name.upper()
 
     def add_node(self, path):
         if path:
             if path in self.project["nodes"]:
                 return
-            msg_status(_("Adding to project: ") + path, True)
+            msg_status(_("Adding to project: ") + collapse_filename(path), True)
             self.project["nodes"].append(path)
             self.project["nodes"].sort(key=Command.node_ordering)
             self.action_refresh()
@@ -371,6 +378,7 @@ class Command:
         self.project_file_path = None
         self.update_global_data()
         app_proc(PROC_SET_FOLDER, '')
+        app_proc(PROC_SET_PROJECT, '')
 
     def add_recent(self, path):
         recent = self.options["recent_projects"]
@@ -488,6 +496,17 @@ class Command:
 
 
     def action_refresh(self, parent=None):
+
+        # it was hard to add TREE_LOCK/UNLOCK directly into action_refresh_int
+        tree_proc(self.tree, TREE_LOCK)
+        try:
+            self.action_refresh_int(parent)
+        finally:
+            tree_proc(self.tree, TREE_UNLOCK)
+
+
+    def action_refresh_int(self, parent=None):
+
         unfold = parent is None
         if parent is None:
             # clear tree
@@ -511,31 +530,37 @@ class Command:
             items_root = tree_proc(self.tree, TREE_ITEM_ENUM, 0)
             tree_proc(self.tree, TREE_ITEM_SELECT, items_root[0][0])
 
-            nodes = self.project["nodes"]
+            nodes = map(Path, self.project["nodes"])
             self.top_nodes = {}
         else:
-            fn = self.get_location_by_index(parent)
+            fn = str(self.get_location_by_index(parent)) # str() is required for old Python 3.5 for os.scandir()
             if not fn: return
             #print('Reading dir:', fn)
             try:
-                nodes = sorted(Path(fn).iterdir(), key=Command.node_ordering)
+                nodes = sorted(os.scandir(fn), key=Command.node_ordering_direntry)
             except:
                 tree_proc(self.tree, TREE_ITEM_SET_ICON, parent, image_index=self.ICON_BAD)
+                raise # good to see the error
                 return
 
-        for path in map(Path, nodes):
-            spath = str(path)
+        for path in nodes:            
+            # DirEntry or Path?
+            if isinstance(path, Path):
+                spath = str(path)
+            else:
+                spath = path.path
+            is_dir = path.is_dir() 
             sname = path.name
             if is_win_root(spath):
                 sname = spath
             elif self.options.get("no_hidden", True) and is_hidden(spath):
                 continue
-            elif self.is_filename_ignored(spath):
+            elif self.is_filename_ignored(spath, is_dir):
                 continue
 
             if is_locked(spath):
                 imageindex = self.ICON_BAD
-            elif path.is_dir():
+            elif is_dir:
                 imageindex = self.ICON_DIR
             elif is_simple_listed(path.name, MASKS_IMAGES):
                 imageindex = self.ICON_IMG
@@ -560,7 +585,7 @@ class Command:
                 data=spath
                 )
             if nodes is self.project["nodes"]:
-                self.top_nodes[index] = path
+                self.top_nodes[index] = Path(spath)
 
             # dummy nested node for folders
             if imageindex == self.ICON_DIR:
@@ -586,7 +611,7 @@ class Command:
             path = dlg_file(True, "", "", PROJECT_DIALOG_FILTER)
         if path:
             if Path(path).exists():
-                print(_('Loading project: ') + path)
+                print(_('Loading project: ') + collapse_filename(path))
                 with open(path, encoding='utf8') as fin:
                     self.project = json.load(fin)
                     self.project_file_path = Path(path)
@@ -601,9 +626,10 @@ class Command:
                         app_proc(PROC_SET_FOLDER, fn)
                         break
 
+                app_proc(PROC_SET_PROJECT, path)
                 msg_status(_("Project opened: ") + path)
             else:
-                msg_status(_("Recent item not found: ") + path)
+                msg_status(_("Project filename is not found: ") + path)
 
     def action_add_folder(self):
         fn = dlg_dir("")
@@ -657,7 +683,7 @@ class Command:
                 json.dump(self.project, fout, indent=4)
 
             self.update_global_data()
-            print(_('Saving project: ') + str(path))
+            print(_('Saving project: ') + collapse_filename(str(path)))
             msg_status(_("Project saved"))
 
             if need_refresh:
@@ -714,7 +740,7 @@ class Command:
             return
 
         items_nice = [os.path.basename(fn)+'\t'+os.path.dirname(fn) for fn in items]
-        res = dlg_menu(MENU_LIST, items_nice, caption=_('Recent projects'))
+        res = dlg_menu(DMENU_LIST, items_nice, caption=_('Recent projects'))
         if res is None:
             return
 
@@ -808,8 +834,8 @@ class Command:
             if self.project_file_path:
                 self.action_save_project_as(self.project_file_path)
 
-    def is_filename_ignored(self, fn):
-        if os.path.isdir(fn):
+    def is_filename_ignored(self, fn, is_dir):
+        if is_dir:
             msk = self.options.get("no_dirs", "")
         else:
             msk = self.options.get("no_files", "")
@@ -940,9 +966,9 @@ class Command:
             return
 
         files.sort()
-        files_nice = [os.path.basename(fn)+'\t'+os.path.dirname(fn) for fn in files]
+        files_nice = [os.path.basename(fn)+'\t'+collapse_filename(os.path.dirname(fn)) for fn in files]
 
-        res = dlg_menu(MENU_LIST_ALT+MENU_NO_FULLFILTER, #fuzzy search is needed for users
+        res = dlg_menu(DMENU_LIST_ALT+DMENU_NO_FULLFILTER, #fuzzy search is needed for users
                        files_nice,
                        caption=_('Go to file')
                        )
