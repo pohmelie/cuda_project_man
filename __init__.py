@@ -160,7 +160,7 @@ class Command:
         ("-"                       , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD], ""),
         (_("Go to file...")        , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD], "cuda_project_man.action_go_to_file"),
         (_("Project properties..."), "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD], "cuda_project_man.action_project_properties"),
-        (_("Config...")            , "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD], "cuda_project_man.action_config"),
+        (_("Configure Project Manager..."), "", [None, NODE_PROJECT, NODE_DIR, NODE_FILE, NODE_BAD], "cuda_project_man.action_config"),
     )
 
     options = {
@@ -228,7 +228,8 @@ class Command:
         _toolbar_add_btn(self.h_bar, hint=_('Add file'), icon=icon_add_file, command='cuda_project_man.action_add_file' )
         _toolbar_add_btn(self.h_bar, hint=_('Remove node'), icon=icon_del, command='cuda_project_man.action_remove_node' )
         _toolbar_add_btn(self.h_bar, hint='-' )
-        _toolbar_add_btn(self.h_bar, hint=_('Config'), icon=icon_cfg, command='cuda_project_man.action_config' )
+        _toolbar_add_btn(self.h_bar, hint=_('Project properties'), icon=icon_cfg, command='cuda_project_man.action_project_properties' )
+        _toolbar_add_btn(self.h_bar, hint=_('Configure Project Manager'), icon=icon_cfg, command='cuda_project_man.action_config' )
         toolbar_proc(self.h_bar, TOOLBAR_UPDATE)
 
         n = dlg_proc(self.h_dlg, DLG_CTL_ADD, prop='treeview')
@@ -641,16 +642,24 @@ class Command:
 
     def action_remove_node(self):
         index = self.selected
-        while index and index not in self.top_nodes:
-            index = tree_proc(self.tree, TREE_ITEM_GET_PROPS, index)["parent"]
+        while True:
+            prop = tree_proc(self.tree, TREE_ITEM_GET_PROPS, index)
+            if prop["level"] == 0:
+                return
+            if prop["level"] == 1:
+                path = prop["data"]
+                break
+            index = prop["parent"]
+
+        tree_proc(self.tree, TREE_ITEM_DELETE, index)
+        if str(path) in self.project["nodes"]:
+            self.project["nodes"].remove(str(path))
 
         if index in self.top_nodes:
-            tree_proc(self.tree, TREE_ITEM_DELETE, index)
-            path = self.top_nodes.pop(index)
-            if str(path) in self.project["nodes"]:
-                self.project["nodes"].remove(str(path))
-            if self.project_file_path:
-                self.action_save_project_as(self.project_file_path)
+            self.top_nodes.pop(index)
+
+        if self.project_file_path:
+            self.action_save_project_as(self.project_file_path)
 
     def action_clear_project(self):
         self.project["nodes"].clear()
@@ -704,8 +713,8 @@ class Command:
         global global_project_info
         global_project_info['filename'] = str(self.project_file_path) if self.project_file_path else ''
         global_project_info['nodes'] = self.project['nodes']
-        global_project_info['vars'] = self.project.get('vars', [])
-        global_project_info['mainfile'] = self.project.get('mainfile', '')
+        global_project_info['vars'] = self.project.setdefault('vars', [])
+        global_project_info['mainfile'] = self.project.setdefault('mainfile', '')
 
     def get_info(self, index):
         if index is None:
