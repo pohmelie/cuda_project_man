@@ -3,6 +3,7 @@ import re
 import collections
 import json
 import stat
+import copy
 from fnmatch import fnmatch
 from pathlib import Path, PurePosixPath
 from .projman_glob import *
@@ -24,6 +25,23 @@ def _file_open(fn, options=''):
     gr = ed.get_prop(PROP_INDEX_GROUP)
     #print('Opening file in group %d'%gr)
     file_open(fn, group=gr, options=options)
+
+# https://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
+def which(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
 
 def project_variables():
     """
@@ -151,6 +169,9 @@ class Command:
         (_("New directory...")     , "dir", [NODE_DIR], "cuda_project_man.action_new_directory"),
         (_("Find in directory...") , "dir", [NODE_DIR], "cuda_project_man.action_find_in_directory"),
 
+        (_("Open in default application")
+                                   , "file", [NODE_FILE], "cuda_project_man.action_open_def"),
+        (_("Focus in file manager"), "file", [NODE_FILE], "cuda_project_man.action_focus_in_fileman"),
         (_("Rename...")            , "file", [NODE_FILE], "cuda_project_man.action_rename"),
         (_("Delete file")          , "file", [NODE_FILE], "cuda_project_man.action_delete_file"),
         (_("Set as main file")     , "file", [NODE_FILE], "cuda_project_man.action_set_as_main_file"),
@@ -176,6 +197,7 @@ class Command:
     tree = None
     h_dlg = None
     h_menu = None
+    h_menu_cfg = None
 
     def __init__(self):
         settings_dir = Path(app_path(APP_DIR_SETTINGS))
@@ -228,8 +250,7 @@ class Command:
         _toolbar_add_btn(self.h_bar, hint=_('Add file'), icon=icon_add_file, command='cuda_project_man.action_add_file' )
         _toolbar_add_btn(self.h_bar, hint=_('Remove node'), icon=icon_del, command='cuda_project_man.action_remove_node' )
         _toolbar_add_btn(self.h_bar, hint='-' )
-        _toolbar_add_btn(self.h_bar, hint=_('Project properties'), icon=icon_cfg, command='cuda_project_man.action_project_properties' )
-        _toolbar_add_btn(self.h_bar, hint=_('Configure Project Manager'), icon=icon_cfg, command='cuda_project_man.action_config' )
+        _toolbar_add_btn(self.h_bar, hint=_('Configure'), icon=icon_cfg, command='cuda_project_man.menu_cfg')
         toolbar_proc(self.h_bar, TOOLBAR_UPDATE)
 
         n = dlg_proc(self.h_dlg, DLG_CTL_ADD, prop='treeview')
@@ -240,7 +261,7 @@ class Command:
             'a_b':('',']'),
             'on_menu': 'cuda_project_man.tree_on_menu',
             'on_unfold': 'cuda_project_man.tree_on_unfold',
-            'on_change': 'cuda_project_man.tree_on_click',
+            'on_click': 'cuda_project_man.tree_on_click',
             'on_click_dbl': 'cuda_project_man.tree_on_click_dbl',
             } )
 
@@ -410,6 +431,53 @@ class Command:
         self.jump_to_filename(str(path))
         if os.path.isfile(str(path)):
             _file_open(str(path))
+
+    def action_open_def(self):
+        fn = str(self.get_location_by_index(self.selected))
+        if not os.path.isfile(fn):
+            return
+        suffix = app_proc(PROC_GET_OS_SUFFIX, '')
+        if suffix=='':
+            #Windows
+            os.startfile(fn)
+        elif suffix=='__mac':
+            #macOS
+            os.system('open "'+fn+'"')
+        elif suffix=='__haiku':
+            #Haiku
+            msg_status('TODO: implemenet "Open in default app" for Haiku')
+        else:
+            #other Unixes
+            os.system('xdg-open "'+fn+'"')
+
+    def action_focus_in_fileman(self):
+        fn = str(self.get_location_by_index(self.selected))
+        if not os.path.isfile(fn):
+            return
+        suffix = app_proc(PROC_GET_OS_SUFFIX, '')
+
+        if suffix=='':
+            #Windows
+            os.system('explorer.exe /select,'+fn)
+        elif suffix=='__mac':
+            #macOS
+            fn = fn.replace(' ', '\\ ') #macOS cannot handle quoted filename
+            os.system('open --new --reveal '+fn)
+        elif suffix=='__haiku':
+            #Haiku
+            msg_status('"Focus in file manager" not implemented for this OS')
+        else:
+            #Linux and others
+            if which('nautilus'):
+                os.system('nautilus "'+fn+'"')
+            elif which('thunar'):
+                os.system('thunar "'+os.path.dirname(fn)+'"')
+            elif which('caja'):
+                os.system('caja "'+os.path.dirname(fn)+'"')
+            elif which('dolphin'):
+                os.system('dolphin --select --new-window "'+fn+'"')
+            else:
+                msg_status('"Focus in file manager" does not support your file manager')
 
     def action_rename(self):
         location = Path(self.get_location_by_index(self.selected))
@@ -611,10 +679,20 @@ class Command:
         if path is None:
             path = dlg_file(True, "", "", PROJECT_DIALOG_FILTER)
         if path:
+            proj_dir = os.path.dirname(path)
+            def expand_macros(s):
+                return s.replace('{ProjDir}', proj_dir, 1)
+            
             if Path(path).exists():
                 print(_('Loading project: ') + collapse_filename(path))
                 with open(path, encoding='utf8') as fin:
                     self.project = json.load(fin)
+
+                    if 'nodes' in self.project:
+                        for i in range(len(self.project['nodes'])):
+                            self.project['nodes'][i] = expand_macros(self.project['nodes'][i])
+                    #print('Loaded project:', self.project)
+
                     self.project_file_path = Path(path)
                     self.add_recent(path)
                     self.action_refresh()
@@ -674,6 +752,7 @@ class Command:
             self.action_save_project_as(self.project_file_path)
 
     def action_save_project_as(self, path=None):
+
         need_refresh = path is None
         if path is None:
             if self.project_file_path:
@@ -683,13 +762,26 @@ class Command:
             path = dlg_file(False, "", project_path, PROJECT_DIALOG_FILTER)
 
         if path:
+            proj_dir = os.path.dirname(path)
+            def collapse_macros(s):
+                fn = s
+                if (fn+os.sep).startswith(proj_dir+os.sep):
+                    fn = fn.replace(proj_dir, '{ProjDir}', 1)
+                return fn
+
             path = Path(path)
             if path.suffix != PROJECT_EXTENSION:
                 path = path.parent / (path.name + PROJECT_EXTENSION)
 
+            # pre-processing of dict before saving
+            d = copy.deepcopy(self.project)
+            if 'nodes' in d:
+                for i in range(len(d['nodes'])):
+                    d['nodes'][i] = collapse_macros(d['nodes'][i])
+
             self.project_file_path = path
             with path.open("w", encoding='utf8') as fout:
-                json.dump(self.project, fout, indent=4)
+                json.dump(d, fout, indent=4)
 
             self.update_global_data()
             print(_('Saving project: ') + collapse_filename(str(path)))
@@ -708,6 +800,14 @@ class Command:
 
     def action_config(self):
         self.config()
+
+    def menu_cfg(self):
+        if self.h_menu_cfg is None:
+            self.h_menu_cfg = menu_proc(0, MENU_CREATE)
+            menu_proc(self.h_menu_cfg, MENU_ADD, command='cuda_project_man.action_project_properties', caption=_('Project properties...'))
+            menu_proc(self.h_menu_cfg, MENU_ADD, command='cuda_project_man.action_config', caption=_('Project Manager options...'))
+
+        menu_proc(self.h_menu_cfg, MENU_SHOW)
 
     def update_global_data(self):
         global global_project_info
@@ -1169,16 +1269,16 @@ class Command:
 
     def enum_all_files(self):
         files = []
-        folders_to_search = self.project['nodes'].copy()
+        dirs = self.project['nodes'].copy()
 
-        while(folders_to_search):
+        while dirs:
             try:
-                next_dir = folders_to_search.pop(0)
+                next_dir = dirs.pop(0)
                 for found in os.scandir(next_dir):
                     # Ignoring symlinks prevents infinite loops with cyclic directory layouts
                     if found.is_dir() and not found.is_symlink() and not self.is_filename_ignored(found.path, True):
-                        folders_to_search.append(found.path)
-                    if found.is_file() and not self.is_filename_ignored(found.path, False):
+                        dirs.append(found.path)
+                    elif found.is_file() and not self.is_filename_ignored(found.path, False):
                         files.append(found.path)
             except (OSError, FileNotFoundError):
                 pass # Permissions issue. Not much we can do
