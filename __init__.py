@@ -1168,18 +1168,20 @@ class Command:
             msg_status(_('Project main file is not set'))
 
     def enum_all_files(self):
-
-        import glob
         files = []
+        folders_to_search = self.project['nodes'].copy()
 
-        for root in self.project['nodes']:
-            if os.path.isdir(root):
-                f = glob.glob(os.path.join(root, '**', '*'), recursive=True)
-                f = [fn for fn in f if os.path.isfile(fn)]
-                files.extend(f)
-            elif os.path.isfile(root):
-                files.append(root)
-
+        while(folders_to_search):
+            try:
+                next_dir = folders_to_search.pop(0)
+                for found in os.scandir(next_dir):
+                    # Ignoring symlinks prevents infinite loops with cyclic directory layouts
+                    if found.is_dir() and not found.is_symlink() and not self.is_filename_ignored(found.path, True):
+                        folders_to_search.append(found.path)
+                    if found.is_file() and not self.is_filename_ignored(found.path, False):
+                        files.append(found.path)
+            except (OSError, FileNotFoundError):
+                pass # Permissions issue. Not much we can do
         return files
 
     def open_all(self):
